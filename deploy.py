@@ -37,15 +37,23 @@ def set_custom_prompt():
 
     return prompt
 
+# def load_llm():
+#     llm = CTransformers(
+#     model='llama-2-7b-chat.ggmlv3.q4_1.bin',
+#     model_type='llama',
+#     max_new_tokens=512,
+#     temperature=0.5
+#     )
+#     return llm
+
 def load_llm():
     llm = CTransformers(
-    model='llama-2-7b-chat.ggmlv3.q4_1.bin',
-    model_type='llama',
-    max_new_tokens=512,
-    temperature=0.5
-    )
+        model='TheBloke/Llama-2-7B-Chat-GGML', 
+        model_file='llama-2-7b-chat.ggmlv3.q4_1.bin',
+        max_new_tokens=512,
+        temperature=0.5
+        )
     return llm
-
 
 def retrieval_qa_chain(llm,prompt,db):
     qa_chain=RetrievalQA.from_chain_type(
