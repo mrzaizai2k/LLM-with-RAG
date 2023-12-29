@@ -6,4 +6,7 @@ freeze:
 	pip freeze > setup.txt
 
 bot: 
-	chainlit run deploy.py -w
+	chainlit run src/deploy.py -w
+
+data:
+	python3 src/ingest.py

@@ -1,3 +1,6 @@
+import sys
+sys.path.append("")
+
 from langchain import PromptTemplate
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
@@ -5,6 +8,7 @@ from langchain.llms import CTransformers
 from langchain.chains import RetrievalQA
 import chainlit as cl
 import torch
+from src.utils import *
 
 DB_FAISS_PATH = "vectorstores/db_faiss/"
 
@@ -18,16 +22,7 @@ Only returns the helpful anser below and nothing else.
 Helpful answer
 '''
 
-print("dones")
-
-# Check for GPU availability
-gpu_available = torch.cuda.is_available()
-
-# Set the device based on availability
-device = torch.device("cuda" if gpu_available else "cpu")
-
-# Print the selected device
-print(f"Selected device: {device}")
+device =  take_device()
 
 def set_custom_prompt():
     '''

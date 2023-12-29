@@ -9,3 +9,4 @@ sentence_transformers
 faiss_cpu
 chainlit
 ctransformers
+docx2txt
