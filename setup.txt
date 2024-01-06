@@ -10,3 +10,8 @@ faiss_cpu
 chainlit
 ctransformers
 docx2txt
+yt_dlp
+pydub 
+librosa
+youtube-transcript-api
+tiktoken
