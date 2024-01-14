@@ -9,6 +9,13 @@ from langchain.chains import RetrievalQA
 import chainlit as cl
 import torch
 from src.utils import *
+from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
+from transformers import pipeline
+from ctransformers import AutoModelForCausalLM
+from transformers import AutoTokenizer
+
+
+
 
 DB_FAISS_PATH = "vectorstores/db_faiss/"
 
@@ -42,12 +49,23 @@ def set_custom_prompt():
 #     return llm
 
 def load_llm():
-    llm = CTransformers(
-        model='TheBloke/Llama-2-7B-Chat-GGML', 
-        model_file='llama-2-7b-chat.ggmlv3.q4_1.bin',
-        max_new_tokens=512,
-        temperature=0.5
-        )
+    # llm = CTransformers(
+    #     model='TheBloke/Llama-2-7B-Chat-GGML', 
+    #     model_file='llama-2-7b-chat.ggmlv3.q4_1.bin',
+    #     max_new_tokens=512,
+    #     temperature=0.5,
+    #     seed = 42,
+    #     gpu_layers = 50,
+    #     )
+    model_id = "gpt2"
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    model = AutoModelForCausalLM.from_pretrained(model_id)
+    pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, 
+                    max_new_tokens=512, 
+                    temperature=0.5,
+                    device=take_device(),)
+
+    llm = HuggingFacePipeline(pipeline=pipe)
     return llm
 
 def retrieval_qa_chain(llm,prompt,db):
