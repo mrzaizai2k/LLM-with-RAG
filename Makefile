@@ -10,3 +10,9 @@ bot:
 
 data:
 	python3 src/ingest.py
+
+list: #List all the running bots 
+	ps aux | grep python
+# To kill, use command (PID is the process ID): kill PID
+kill:
+	pkill -f "make bot"

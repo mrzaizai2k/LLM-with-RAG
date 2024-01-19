@@ -8,12 +8,15 @@ from langchain.llms import CTransformers
 from langchain.chains import RetrievalQA
 import chainlit as cl
 import torch
+from dotenv import load_dotenv
+load_dotenv()
+
 from src.utils import *
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from transformers import pipeline
 from ctransformers import AutoModelForCausalLM
 from transformers import AutoTokenizer
-
+from langchain_openai import OpenAI
 
 
 
@@ -39,33 +42,12 @@ def set_custom_prompt():
 
     return prompt
 
-# def load_llm():
-#     llm = CTransformers(
-#     model='llama-2-7b-chat.ggmlv3.q4_1.bin',
-#     model_type='llama',
-#     max_new_tokens=512,
-#     temperature=0.5
-#     )
-#     return llm
-
 def load_llm():
-    # llm = CTransformers(
-    #     model='TheBloke/Llama-2-7B-Chat-GGML', 
-    #     model_file='llama-2-7b-chat.ggmlv3.q4_1.bin',
-    #     max_new_tokens=512,
-    #     temperature=0.5,
-    #     seed = 42,
-    #     gpu_layers = 50,
-    #     )
-    model_id = "gpt2"
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
-    model = AutoModelForCausalLM.from_pretrained(model_id)
-    pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, 
-                    max_new_tokens=512, 
-                    temperature=0.5,
-                    device=take_device(),)
-
-    llm = HuggingFacePipeline(pipeline=pipe)
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+    llm = OpenAI(openai_api_key=OPENAI_API_KEY, 
+                        max_tokens = 512,
+                        temperature=0.5,
+                        )
     return llm
 
 def retrieval_qa_chain(llm,prompt,db):
