@@ -7,6 +7,7 @@ from langchain.document_loaders import (
     DirectoryLoader,
     UnstructuredHTMLLoader,
     UnstructuredWordDocumentLoader,
+    UnstructuredPowerPointLoader,
     BSHTMLLoader,
     Docx2txtLoader,
     TextLoader
@@ -41,9 +42,22 @@ def create_vector_db(DATA_PATH: str = 'web_data/',
             elif f.endswith(".txt") or f.endswith(".md"):
                 loader = TextLoader(path)
                 documents.extend(loader.load())
+            
+            elif f.endswith(".ppt") or f.endswith(".pptx"):
+                
+                if f.endswith(".ppt"):
+                    # Change the file name to "name.pptx"
+                    new_path = os.path.join(os.path.dirname(path), os.path.splitext(f)[0] + ".pptx")
 
-        except:
+                    # Rename the file
+                    os.rename(path, new_path)
+
+                loader = UnstructuredPowerPointLoader(path)
+                documents.extend(loader.load())
+
+        except Exception as e:
             print("issue with ",f)
+            print('Error:',e)
             pass
 
 
