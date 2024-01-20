@@ -2,7 +2,19 @@ import sys
 sys.path.append("")
 import os
 import  torch
+import yaml
+import time 
 
+def timeit(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"{func.__name__} took {execution_time:.2f} seconds to execute.")
+        return result
+
+    return wrapper
 
 def is_file(path: str):
     return '.' in path
@@ -36,3 +48,8 @@ def take_device():
     print(f"Selected device: {device}")
 
     return device
+
+def config_parser(data_config_path = 'config/config.yaml'):
+    with open(data_config_path, 'r') as file:
+        data = yaml.safe_load(file)
+    return data

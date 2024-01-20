@@ -1,0 +1,11 @@
+single_url_list: # data from single url. https://python.langchain.com/docs/integrations/document_loaders/news
+  - https://vnexpress.net/viet-nam-len-tieng-ve-viec-trung-quoc-chiem-doat-hoang-sa-4703117.html
+  
+
+
+recursive_url_list: # data mining from index. https://python.langchain.com/docs/integrations/document_loaders/recursive_url
+  - https://ona-book.org/index.html
+
+youtube_url_list:
+  - https://www.youtube.com/watch?v=c75gg0wicus
+  - https://www.youtube.com/watch?v=b-_jx2-cK8c&t=140s

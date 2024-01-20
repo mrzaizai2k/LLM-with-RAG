@@ -4,27 +4,38 @@ sys.path.append("")
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import (
     PyPDFLoader,
+    RecursiveUrlLoader, 
     DirectoryLoader,
     UnstructuredHTMLLoader,
     UnstructuredWordDocumentLoader,
-    UnstructuredPowerPointLoader,
-    UnstructuredImageLoader,
     BSHTMLLoader,
+    UnstructuredImageLoader,
     Docx2txtLoader,
-    TextLoader
+    TextLoader,
+    SeleniumURLLoader,
+    YoutubeLoader,
+    UnstructuredURLLoader,
+    NewsURLLoader,
+    UnstructuredPowerPointLoader,
 )
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
 import os
 import torch
+from bs4 import BeautifulSoup as Soup
+from unstructured.cleaners.core import clean_extra_whitespace
+from langchain.text_splitter import TokenTextSplitter
+
 from utils import *
 
 
-
+@timeit
 def create_vector_db(DATA_PATH: str = 'web_data/', 
                      DB_FAISS_PATH: str = 'vectorstores/db_faiss/', 
                      device = 'cpu'):
     documents = []
+    data = config_parser(data_config_path = 'config/data_config.yaml')
+
     for f in os.listdir(DATA_PATH):
         path = f'{DATA_PATH}/' + f
         try:
@@ -52,8 +63,29 @@ def create_vector_db(DATA_PATH: str = 'web_data/',
 
                     # Rename the file
                     os.rename(path, new_path)
-
                 loader = UnstructuredPowerPointLoader(path)
+                documents.extend(loader.load())
+
+
+            single_url_list = data.get('single_url_list')
+            loader = NewsURLLoader(urls=single_url_list, 
+                                post_processors=[clean_extra_whitespace],)
+            documents.extend(loader.load())
+
+            youtube_url_list = data.get('youtube_url_list')
+            for link in youtube_url_list:
+                loader = YoutubeLoader.from_youtube_url(
+                    link, add_video_info=False
+                )
+                documents.extend(loader.load())
+
+            
+            recursive_url_list = data.get('recursive_url_list')
+            for link in recursive_url_list:
+                loader = RecursiveUrlLoader(
+                    url=link, max_depth=2,
+                    extractor=lambda x: Soup(x, "html.parser").text,
+                )
                 documents.extend(loader.load())
 
         except Exception as e:
@@ -62,7 +94,9 @@ def create_vector_db(DATA_PATH: str = 'web_data/',
             pass
 
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    # text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    text_splitter = TokenTextSplitter(chunk_size=256,
+                                           chunk_overlap=10)
     texts = text_splitter.split_documents(documents)
 
     embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2',
