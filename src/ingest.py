@@ -8,6 +8,7 @@ from langchain.document_loaders import (
     UnstructuredHTMLLoader,
     UnstructuredWordDocumentLoader,
     UnstructuredPowerPointLoader,
+    UnstructuredImageLoader,
     BSHTMLLoader,
     Docx2txtLoader,
     TextLoader
