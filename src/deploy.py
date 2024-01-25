@@ -70,32 +70,39 @@ def final_result(query):
     response=qa_result({'query':query})
     return response 
 
-## chainlit here
-@cl.on_chat_start
-async def start():
-    chain=qa_bot()
-    msg=cl.Message(content="Firing up the company info bot...")
-    await msg.send()
-    msg.content= "Hi, welcome to company info bot. What is your query?"
-    await msg.update()
-    cl.user_session.set("chain",chain)
+
+if __name__ == "__main__":
+    while True:
+        query=input("Enter your query: ")
+        print(final_result(query))
 
 
-@cl.on_message
-async def main(message):
-    chain=cl.user_session.get("chain")
-    cb = cl.AsyncLangchainCallbackHandler(
-    stream_final_answer=True, answer_prefix_tokens=["FINAL","ANSWER"]
-    )
-    cb.ansert_reached=True
-    # res=await chain.acall(message, callbacks=[cb])
-    res=await chain.acall(message.content, callbacks=[cb])
-    answer=res["result"]
-    sources=res["source_documents"]
+# ## chainlit here
+# @cl.on_chat_start
+# async def start():
+#     chain=qa_bot()
+#     msg=cl.Message(content="Firing up the company info bot...")
+#     await msg.send()
+#     msg.content= "Hi, welcome to company info bot. What is your query?"
+#     await msg.update()
+#     cl.user_session.set("chain",chain)
 
-    if sources:
-        answer+=f"\nSources: "+str(str(sources))
-    else:
-        answer+=f"\nNo Sources found"
 
-    await cl.Message(content=answer).send() 
+# @cl.on_message
+# async def main(message):
+#     chain=cl.user_session.get("chain")
+#     cb = cl.AsyncLangchainCallbackHandler(
+#     stream_final_answer=True, answer_prefix_tokens=["FINAL","ANSWER"]
+#     )
+#     cb.ansert_reached=True
+#     # res=await chain.acall(message, callbacks=[cb])
+#     res=await chain.acall(message.content, callbacks=[cb])
+#     answer=res["result"]
+#     sources=res["source_documents"]
+
+#     if sources:
+#         answer+=f"\nSources: "+str(str(sources))
+#     else:
+#         answer+=f"\nNo Sources found"
+
+#     await cl.Message(content=answer).send() 

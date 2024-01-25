@@ -6,6 +6,12 @@ freeze:
 	pip freeze > setup.txt
 
 bot: 
+	mkdir -p logging
+	rm	-f logging/out.txt
+	touch logging/out.txt
+	python -u src/deploy.py 2>&1 | tee logging/out.txt
+	
+botcl:	
 	chainlit run src/deploy.py -w --port 8080
 
 data:
