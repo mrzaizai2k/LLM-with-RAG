@@ -6,7 +6,7 @@ freeze:
 	pip freeze > setup.txt
 
 bot: 
-	chainlit run src/deploy.py -w
+	chainlit run src/deploy.py -w --port 8080
 
 data:
 	python3 src/ingest.py

@@ -1,0 +1,4 @@
+embedding_model: sentence-transformers/all-MiniLM-L6-v2
+splitter_chunk_size: 256
+splitter_chunk_overlap: 10
+
