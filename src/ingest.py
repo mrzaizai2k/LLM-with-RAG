@@ -67,8 +67,8 @@ class VectorDatabase:
     def is_file_in_db(self, file_path):
         return file_path in self.data_index['file_path'].values
 
-    @timeit
-    def read_file_data(self):
+
+    def read_url_data(self):
         documents = []
         file_path_list = []
 
@@ -79,7 +79,7 @@ class VectorDatabase:
                     loader = NewsURLLoader(urls=[link], 
                                         post_processors=[clean_extra_whitespace],)
                     documents.extend(loader.load())
-                    file_path_list.extend(single_url_list)
+                    file_path_list.extend([link])
 
 
         youtube_url_list = self.data_url.get('youtube_url_list')
@@ -102,7 +102,11 @@ class VectorDatabase:
                     )
                     documents.extend(loader.load())
                     file_path_list.append(link)
+        return documents, file_path_list
 
+    def read_file_data(self):
+        documents = []
+        file_path_list = []
 
         for f in os.listdir(self.data_path):
             path = f'{self.data_path}/' + f
@@ -143,8 +147,15 @@ class VectorDatabase:
                 print("issue with ",f)
                 print('Error:',e)
                 pass
-
-
+        return documents, file_path_list
+    
+    @timeit
+    def read_data(self):
+        documents1, file_path_list1 = self.read_file_data()
+        documents2, file_path_list2 = self.read_url_data()
+        documents = documents1 + documents2
+        file_path_list = file_path_list1 + file_path_list2
+        
         return documents, file_path_list
 
     
@@ -170,7 +181,7 @@ class VectorDatabase:
     def save_data_index(self, file_path_list):
         data_index = self._read_data_index()
         current_date = datetime.now().strftime('%Y-%m-%d')
-        file_info = [(path, os.path.splitext(os.path.basename(path))[1][1:], current_date) for path in file_path_list]
+        file_info = [(str(path), os.path.splitext(os.path.basename(path))[1][1:], current_date) for path in file_path_list]
         new_data = pd.DataFrame(file_info, columns=['file_path', 'extension', 'backup_date'])
 
         # Append the new data to the existing data index
@@ -180,7 +191,7 @@ class VectorDatabase:
 
     @timeit
     def create_vector_db(self):
-        documents, file_path_list = self.read_file_data()
+        documents, file_path_list = self.read_data()
         if documents:
             texts = self._split_documents(documents)
             self.save_vector_database(texts)
@@ -199,7 +210,7 @@ class VectorDatabase:
     
 
 def main():
-    vector_db = VectorDatabase(data_path='data/sample/',)
+    vector_db = VectorDatabase()
     documents, file_path_list = vector_db.create_vector_db() 
     print('file_path_list', file_path_list)
 

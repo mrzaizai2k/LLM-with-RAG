@@ -19,18 +19,13 @@ from transformers import AutoTokenizer
 from langchain_openai import OpenAI
 
 
+data = config_parser(data_config_path = 'config/model_config.yaml')
 
-DB_FAISS_PATH = "vectorstores/db_faiss/"
+db_faiss_path = data.get('db_faiss_path')
+custom_prompt_template_path = data.get('custom_prompt_template_path')
 
-custom_prompt_template='''Use the following pieces of information to answer the users question. 
-If you don't know the answer, please just say that you don't know the answer. Don't make up an answer.
-
-Context:{context}
-question:{question}
-
-Only returns the helpful anser below and nothing else.
-Helpful answer
-'''
+with open(custom_prompt_template_path, 'r') as file:
+    custom_prompt_template = file.read()
 
 device =  take_device()
 
@@ -45,8 +40,8 @@ def set_custom_prompt():
 def load_llm():
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
     llm = OpenAI(openai_api_key=OPENAI_API_KEY, 
-                        max_tokens = 1024,
-                        temperature=0.9,
+                        max_tokens = data.get('openai_max_tokens'),
+                        temperature = data.get('openai_temperature'),
                         )
     return llm
 
@@ -54,16 +49,16 @@ def retrieval_qa_chain(llm,prompt,db):
     qa_chain=RetrievalQA.from_chain_type(
     llm=llm,
     chain_type="stuff",
-    retriever=db.as_retriever(search_kwargs={'k':3}),
+    retriever=db.as_retriever(search_kwargs={'k':data.get('k_similar')}),
     return_source_documents=True,
-    chain_type_kwargs={'prompt':prompt  }
+    chain_type_kwargs={'prompt':prompt }
     )
     return qa_chain
 
 def qa_bot():
     embeddings=HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2',
     model_kwargs={'device':device})
-    db = FAISS.load_local(DB_FAISS_PATH,embeddings)
+    db = FAISS.load_local(db_faiss_path,embeddings)
     llm=load_llm()
     qa_prompt=set_custom_prompt()
     qa = retrieval_qa_chain(llm,qa_prompt,db)

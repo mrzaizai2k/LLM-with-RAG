@@ -1,18 +1,15 @@
 single_url_list: # data from single url. https://python.langchain.com/docs/integrations/document_loaders/news
-  - https://vnexpress.net/viet-nam-len-tieng-ve-viec-trung-quoc-chiem-doat-hoang-sa-4703117.html
-  # - https://vnexpress.net/tang-qua-tet-cho-cong-nhan-kem-dieu-kien-phai-mo-the-tin-dung-4704736.html
-  # - https://vnexpress.net/hlv-troussier-keu-goi-cau-thu-viet-nam-tin-tuong-loi-choi-kiem-soat-4705005.html
-  # - https://vnexpress.net/nguoi-ha-noi-trong-gia-ret-duoi-10-do-4704574.html
-  # - https://vnexpress.net/xi-xoa-cho-nguoi-4704778.html
-  # - https://vnexpress.net/musk-neu-khong-bi-rao-can-thuong-mai-xe-dien-trung-quoc-da-de-bep-cac-doi-thu-4705055.html
-  # - https://vnexpress.net/cong-ty-ban-vang-ma-duy-nhat-tren-san-thu-ve-thap-nhat-10-nam-4704284.html
-  
+  # - https://vnexpress.net/viet-nam-len-tieng-ve-viec-trung-quoc-chiem-doat-hoang-sa-4703117.html
+
 
 
 recursive_url_list: # data mining from index. https://python.langchain.com/docs/integrations/document_loaders/recursive_url
-  # - https://ona-book.org/index.html
+  - https://ona-book.org/index.html
 
 youtube_url_list:
-  # - https://www.youtube.com/watch?v=c75gg0wicus
-  # - https://www.youtube.com/watch?v=b-_jx2-cK8c&t=140s
-  # - https://www.youtube.com/watch?v=Q_kJGm1xf6s&list=WL&index=2
+  - https://www.youtube.com/watch?v=c75gg0wicus
+  - https://www.youtube.com/watch?v=b-_jx2-cK8c&t=140s
+  - https://www.youtube.com/watch?v=Q_kJGm1xf6s&list=WL&index=2
+  - https://www.youtube.com/watch?v=spUNpyF58BY&t=5s
+  - https://www.youtube.com/watch?v=r6sGWTCMz2k&t=14s
+  - https://www.youtube.com/watch?v=nmgFG7PUHfo

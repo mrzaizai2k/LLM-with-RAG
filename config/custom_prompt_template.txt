@@ -1,0 +1,8 @@
+Use the following pieces of information to answer the users question. 
+If you don't know the answer, please just say that you don't know the answer. Don't make up an answer.
+
+Context:{context}
+question:{question}
+
+Only returns the helpful anser below and nothing else.
+Helpful answer
