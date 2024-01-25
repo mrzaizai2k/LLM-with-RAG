@@ -18,17 +18,6 @@ from ctransformers import AutoModelForCausalLM
 from transformers import AutoTokenizer
 from langchain_openai import OpenAI
 
-
-data = config_parser(data_config_path = 'config/model_config.yaml')
-
-db_faiss_path = data.get('db_faiss_path')
-custom_prompt_template_path = data.get('custom_prompt_template_path')
-
-with open(custom_prompt_template_path, 'r') as file:
-    custom_prompt_template = file.read()
-
-device =  take_device()
-
 def set_custom_prompt():
     '''
     Prompt template for QA retrieval for each vector store
@@ -72,6 +61,15 @@ def final_result(query):
 
 
 if __name__ == "__main__":
+    data = config_parser(data_config_path = 'config/model_config.yaml')
+
+    db_faiss_path = data.get('db_faiss_path')
+    custom_prompt_template_path = data.get('custom_prompt_template_path')
+
+    with open(custom_prompt_template_path, 'r') as file:
+        custom_prompt_template = file.read()
+
+    device =  take_device()
     while True:
         query=input("Enter your query: ")
         print(final_result(query))
