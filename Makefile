@@ -3,7 +3,7 @@ install:
 # 	source ./venv/bin/activate
 	pip install -r setup.txt
 freeze:
-	pip freeze > setup_full.txt
+	pip freeze > setup.txt
 
 bot: 
 	mkdir -p logging

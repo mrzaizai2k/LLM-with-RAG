@@ -46,6 +46,16 @@ Before running the system, follow these steps to set up the environment:
      ```env
      OPENAI_API_KEY=YOUR_OPENAI_API_KEY
      ```
+## Run docker
+For Linux you must open the port first:
+
+      sudo ufw allow 8083
+
+Build, run and test docker:
+
+      docker build -t llm_test .
+      docker run -p 8083:8083 -v data:/app/data llm_test
+      curl -X POST -H "Content-Type: application/json" -d '{"query": "who is karger"}' http://localhost:8083/query
 
 
 ## Example Uses

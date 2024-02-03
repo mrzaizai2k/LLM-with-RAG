@@ -18,6 +18,10 @@ from ctransformers import AutoModelForCausalLM
 from transformers import AutoTokenizer
 from langchain_openai import OpenAI
 
+
+from flask import Flask, request, jsonify
+
+
 def set_custom_prompt():
     '''
     Prompt template for QA retrieval for each vector store
@@ -60,6 +64,18 @@ def final_result(query):
     return response 
 
 
+
+
+app = Flask(__name__)
+
+@app.route('/query', methods=['POST'])
+def process_query():
+    
+    data = request.get_json()
+    query = data.get('query', '')
+    result = final_result(query)['result']
+    return jsonify({'result': result})
+
 if __name__ == "__main__":
     data = config_parser(data_config_path = 'config/model_config.yaml')
 
@@ -70,9 +86,13 @@ if __name__ == "__main__":
         custom_prompt_template = file.read()
 
     device =  take_device()
-    while True:
-        query=input("Enter your query: ")
-        print(final_result(query))
+    # while True:
+    #     query=input("Enter your query: ")
+    #     print(final_result(query))
+
+    app.run(host='0.0.0.0', port=8083)
+
+
 
 
 # ## chainlit here
