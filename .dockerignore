@@ -1,0 +1,7 @@
+data/
+notebook/
+.chainlit/
+__pycache__/
+.env
+logging/
+venv/
