@@ -48,7 +48,7 @@ class VectorDatabase:
         self.data_index_path = data_index_path
         self.data_index = self._read_data_index()
         
-        # check_path(self.data_index_path)
+        check_path('data')
         
         self.data_url = config_parser(data_config_path = data_url_path)
         self.model_config = config_parser(data_config_path = model_config_path)

@@ -6,7 +6,7 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.llms import CTransformers
 from langchain.chains import RetrievalQA
-import chainlit as cl
+# import chainlit as cl
 import torch
 from dotenv import load_dotenv
 load_dotenv()
