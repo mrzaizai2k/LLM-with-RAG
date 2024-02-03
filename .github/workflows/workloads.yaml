@@ -3,7 +3,7 @@ name: LLM and RAG system
 on:
   push:
     branches:
-      - main2
+      - main
 
 jobs:
   build:
