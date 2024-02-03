@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM python:3.10
 
 
 # Set the working directory to /app
@@ -8,8 +8,8 @@ WORKDIR /app
 COPY . .
 
 # Install necessary packages
-RUN make install && \
-    apt-get update && \
+RUN apt-get update && \
+    pip install -r setup.txt && \
     apt-get install -y make libreoffice python3 && \
     rm -rf /var/lib/apt/lists/*
 
