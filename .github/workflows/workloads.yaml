@@ -20,9 +20,9 @@ jobs:
 
     - name: Install dependencies
       run: |
+        make install
         sudo apt update
         sudo apt install libreoffice 
-        make install
 
 
     # - name: Run bot tests
