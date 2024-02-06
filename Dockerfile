@@ -6,15 +6,14 @@ FROM python:3.10
 WORKDIR /app
 
 # Copy the current directory contents into the container at /app
-COPY . .
+COPY . /app
 
 # Install necessary packages
-# RUN apt-get update && \
-#     apt-get install -y make libreoffice python3 && \
-#     pip install -r setup.txt && \
-#     rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y make libreoffice python3 && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN pip install flask
+RUN pip install -r setup.txt && 
 
 # Make port 8083 available to the world outside this container
 EXPOSE 8083
@@ -22,4 +21,4 @@ EXPOSE 8083
 ENV OPENAI_API_KEY=${OPENAI_API_KEY}
 
 # Run script.py when the container launches
-CMD ["python", "src/deploy.py"]
+CMD ["python", "src/api.py"]

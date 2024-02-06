@@ -1,39 +1,40 @@
 import sys
 sys.path.append("")
 
-import flask
 from dotenv import load_dotenv
 load_dotenv()
 
 from src.utils import *
-from src.deploy import *
+from src.ragqa import *
+
 
 from flask import Flask, request, jsonify
 
 
-# app = Flask(__name__)
+app = Flask(__name__)
 
-# @app.route('/query', methods=['POST'])
-# def process_query():
-    
-#     data = request.get_json()
-#     query = data.get('query', '')
-#     result = final_result(query)
-#     return jsonify({'result': result})
+rag_system = RagSystem(data_config_path='config/model_config.yaml')
 
-# if __name__ == '__main__':
-#     app.run(host='0.0.0.0', port=8083)
+def serialize_document(document):
+    return {
+        'page_content': document.page_content,
+        'metadata': document.metadata
+    }
 
-import requests
+def format_result(result):
+    for i, doc in enumerate(result['source_documents']):
+        print(f'--page_content {i}: {doc.page_content}')
+        print(f'--metadata {i}: {doc.metadata}')
 
-# URL for the API endpoint
-api_url = 'http://localhost:8083/query'
+@app.route('/query', methods=['POST'])
+def process_query():
+    data = request.get_json()
+    query = data.get('query', '')
+    result = rag_system.final_result(query)
+    result['source_documents']=[serialize_document(doc) for doc in result['source_documents']] # list(dict)
 
-# Input query
-query = input("Enter your query: ")
+    return jsonify(result)
 
-# Send POST request to the API
-response = requests.post(api_url, json={'query': query})
 
-# Print the response
-print(response.json())
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=8083)

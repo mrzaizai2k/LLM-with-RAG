@@ -5,14 +5,13 @@ install:
 freeze:
 	pip freeze > setup.txt
 
+ragqa:
+	python3 src/ragqa.py
 bot: 
 	mkdir -p logging
 	rm	-f logging/out.txt
 	touch logging/out.txt
-	python -u src/deploy.py 2>&1 | tee logging/out.txt
-	
-botcl:	
-	chainlit run src/deploy.py -w --port 8080
+	python -u src/api.py 2>&1 | tee logging/out.txt
 
 data:
 	python3 src/ingest.py
@@ -22,3 +21,11 @@ list: #List all the running bots
 # To kill, use command (PID is the process ID): kill PID
 kill:
 	pkill -f "make bot"
+
+api:
+	python3 src/api.py
+
+test:
+#	python3 src/api.py
+	curl -X POST -H "Content-Type: application/json" -d '{"query": "who is karger"}' http://localhost:8083/query
+# python3 src/test_api.py

@@ -40,11 +40,11 @@ class VectorDatabase:
                      db_faiss_path: str = 'data/vectorstores/db_faiss/', 
                      model_config_path: str = 'config/model_config.yaml',
                      data_url_path: str = 'config/data_config.yaml',
-                     device = 'cpu'):
+                     ):
         
         self.data_path = data_path
         self.db_faiss_path = db_faiss_path
-        self.device = device
+        self.device = take_device()
         self.data_index_path = data_index_path
         self.data_index = self._read_data_index()
         
