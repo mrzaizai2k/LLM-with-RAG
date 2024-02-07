@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM python:3.10-slim
 # FROM mrzaizai2k/llm_n_rag
 
 

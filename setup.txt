@@ -27,7 +27,6 @@ comm==0.2.0
 contourpy==1.2.0
 cryptography==41.0.7
 cssselect==1.2.0
-ctransformers==0.2.27
 cycler==0.12.1
 dataclasses-json==0.6.4
 debugpy==1.8.0

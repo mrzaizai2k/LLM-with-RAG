@@ -60,18 +60,20 @@ For Linux you must open the port first:
 
       sudo ufw allow 8083
 
-Build, run and test docker:
+ docker:
 
       docker build -t mrzaizai2k/llm_n_rag .
       docker run -p 8083:8083 -v data:/app/data -e OPENAI_API_KEY llm_test
-      curl -X POST -H "Content-Type: application/json" -d '{"query": "who is karger"}' http://localhost:8083/query
+      
 
-Run docker compose
+Build, run docker compose:
 
-      docker compose -f "compose.yaml" up -d --build
-
-Hoặc
       docker-compose up
+
+Test docker on port 8083:
+
+      curl -X POST -H "Content-Type: application/json" -d '{"query": "who is karger"}' http://localhost:8083/query
+      curl -X POST http://localhost:8083/update
 
 ## Example Uses
 
