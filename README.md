@@ -8,6 +8,7 @@ I just wanna build my own LLM with RAG
 
 ## Table of Contents
 1. [Introduction](#introduction)
+1. [Features](#features)
 3. [How to Set Up](#how-to-set-up)
 4. [Example Uses](#example-uses)
 5. [To-Do List](#to-do-list)
@@ -15,6 +16,14 @@ I just wanna build my own LLM with RAG
 ## Introduction
 Welcome to the my LLM with RAG system! This system is designed for me the ease the learning as a master in HCMUT
 
+## Features
+1. Update vector database
+
+            curl -X POST http://localhost:8083/update
+
+2. Ask questions with vector data
+
+            curl -X POST -H "Content-Type: application/json" -d '{"query": "who is karger"}' http://localhost:8083/query
 
 ## How to Set Up
 
@@ -53,8 +62,8 @@ For Linux you must open the port first:
 
 Build, run and test docker:
 
-      docker build -t llm_test .
-      docker run -p 8083:8083 -v data:/app/data llm_test
+      docker build -t mrzaizai2k/llm_n_rag .
+      docker run -p 8083:8083 -v data:/app/data -e OPENAI_API_KEY llm_test
       curl -X POST -H "Content-Type: application/json" -d '{"query": "who is karger"}' http://localhost:8083/query
 
 

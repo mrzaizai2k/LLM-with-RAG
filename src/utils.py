@@ -5,6 +5,12 @@ import  torch
 import yaml
 import time 
 
+def serialize_document(document):
+    return {
+        'page_content': document.page_content,
+        'metadata': document.metadata
+    }
+
 def timeit(func):
     def wrapper(*args, **kwargs):
         start_time = time.time()
