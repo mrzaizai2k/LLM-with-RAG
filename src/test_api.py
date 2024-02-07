@@ -36,5 +36,6 @@ def test_update_db():
         print(f"API Test Failed: {str(e)}")
 
 if __name__ == '__main__':
-    test_update_db()
+    # test_update_db()
+    
     test_llm()

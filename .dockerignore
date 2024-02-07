@@ -160,19 +160,16 @@ cython_debug/
 #.idea/
 
 *.bin
-/data
 /web_data
 *.pdf 
-/vectorstores
+# vectorstores/
 /.chainlit
 .env
-data/
+# data/
 logging/
 
-data/
 notebook/
 .chainlit/
 __pycache__/
-.env
-logging/
+
 venv/

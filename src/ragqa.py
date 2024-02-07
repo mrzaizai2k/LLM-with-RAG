@@ -89,6 +89,7 @@ def format_result(result):
 
 if __name__ == "__main__":
     rag_system = RagSystem(data_config_path='config/model_config.yaml')
+    rag_system.update_vector_db()
     while True:
         query=input("Enter your query: ")
         result = rag_system.final_result(query)
