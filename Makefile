@@ -9,7 +9,7 @@ api:
 	mkdir -p logging
 	rm	-f logging/out.txt
 	touch logging/out.txt
-	python -u src/api.py 2>&1 | tee logging/out.txt
+	python src/api.py 2>&1 | tee logging/out.txt
 
 ingest:
 	python3 src/ingest.py
