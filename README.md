@@ -25,6 +25,11 @@ Welcome to the my LLM with RAG system! This system is designed for me the ease t
 
             curl -X POST -H "Content-Type: application/json" -d '{"query": "who is karger"}' http://localhost:8083/query
 
+## Nougat
+Link: https://github.com/facebookresearch/nougat
+
+      nougat data/web_data/Growth_of_Functions.pdf --markdown --no-skipping -m 0.1.0-base -o data/nougat
+
 ## How to Set Up
 
 ### Prerequisites
