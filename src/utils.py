@@ -59,3 +59,15 @@ def config_parser(data_config_path = 'config/config.yaml'):
     with open(data_config_path, 'r') as file:
         data = yaml.safe_load(file)
     return data
+
+def format_result(result):
+    print(f"result: {result['result']}")
+    for i, doc in enumerate(result['source_documents']):
+        print(f'--page_content {i}: {doc.page_content}')
+        print(f'--metadata {i}: {doc.metadata}')
+
+def serialize_document(document):
+    return {
+        'page_content': document.page_content,
+        'metadata': document.metadata
+    }

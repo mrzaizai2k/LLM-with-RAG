@@ -14,7 +14,7 @@ from src.ingest import VectorDatabase
 from langchain_openai import OpenAI, ChatOpenAI
 from setfit import SetFitModel
 from src.utils import *
-
+import time
 
 class RagSystem:
     def __init__(self, data_config_path = 'config/model_config.yaml'):
@@ -33,7 +33,8 @@ class RagSystem:
                                     allow_dangerous_deserialization=True)
 
     def load_model_routing(self):
-        routing_model=SetFitModel.from_pretrained(self.data_config["routing_model"])
+        routing_model=SetFitModel.from_pretrained(self.data_config["routing_model"]).to(self.device)
+        routing_model.predict(["who is karger"]) #load the dummy input
         return routing_model
     
 
@@ -99,11 +100,6 @@ class RagSystem:
         self.vector_db = self.load_vector_db()
         return 
 
-def format_result(result):
-    print(f"result: {result['result']}")
-    for i, doc in enumerate(result['source_documents']):
-        print(f'--page_content {i}: {doc.page_content}')
-        print(f'--metadata {i}: {doc.metadata}')
 
 if __name__ == "__main__":
     rag_system = RagSystem(data_config_path='config/model_config.yaml')
