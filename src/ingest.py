@@ -1,34 +1,31 @@
 import sys
 sys.path.append("")
+
+from langchain_community.document_loaders import (BSHTMLLoader, 
+                                                  DirectoryLoader, 
+                                                  Docx2txtLoader, 
+                                                  NewsURLLoader, 
+                                                  PyPDFLoader, 
+                                                  RecursiveUrlLoader, 
+                                                  SeleniumURLLoader, 
+                                                  TextLoader, 
+                                                  UnstructuredHTMLLoader,
+                                                UnstructuredImageLoader,
+                                                UnstructuredPowerPointLoader, 
+                                                UnstructuredURLLoader, 
+                                                UnstructuredWordDocumentLoader, 
+                                                YoutubeLoader)
+from langchain_text_splitters import RecursiveCharacterTextSplitter, TokenTextSplitter
+
 import os
 import torch
 import pickle
 import pandas as pd
 from datetime import datetime
 from bs4 import BeautifulSoup as Soup
-
-
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import (
-    PyPDFLoader,
-    RecursiveUrlLoader, 
-    DirectoryLoader,
-    UnstructuredHTMLLoader,
-    UnstructuredWordDocumentLoader,
-    BSHTMLLoader,
-    UnstructuredImageLoader,
-    Docx2txtLoader,
-    TextLoader,
-    SeleniumURLLoader,
-    YoutubeLoader,
-    UnstructuredURLLoader,
-    NewsURLLoader,
-    UnstructuredPowerPointLoader,
-)
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from unstructured.cleaners.core import clean_extra_whitespace
-from langchain.text_splitter import TokenTextSplitter
 
 from src.utils import *
 
