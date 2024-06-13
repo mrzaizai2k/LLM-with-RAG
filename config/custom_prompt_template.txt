@@ -4,5 +4,5 @@ If you don't know the answer, please just say that you don't know the answer. Do
 Context:{context}
 question:{question}
 
-Only returns the helpful anser below and nothing else.
+Only returns the helpful anwser in telegram markdown syntax and nothing else.
 Helpful answer
