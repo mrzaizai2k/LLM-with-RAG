@@ -30,7 +30,7 @@ def process_query():
     result = rag_system.final_result(query)
     result['source_documents']=[serialize_document(doc) for doc in result['source_documents']] # list(dict)
 
-    return jsonify(result)
+    return jsonify(result), 200
 
 
 
@@ -40,10 +40,10 @@ def update_db():
         # Assuming rag_system is defined somewhere else in your code 
         rag_system.update_vector_db()
         # Returning a response with JSON format for better clarity
-        return jsonify({'code': 200, 'message': 'Update successful'}), 200
+        return jsonify({'message': 'Update successful'}), 200
     except Exception as e:
         # Returning a meaningful error code and message in case of exceptions
-        return jsonify({'code': 500, 'message': 'Internal server error: {}'.format(str(e))}), 500
+        return jsonify({'message': 'Internal server error: {}'.format(str(e))}), 500
 
 
 if __name__ == "__main__":

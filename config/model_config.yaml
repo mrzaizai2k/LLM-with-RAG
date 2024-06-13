@@ -1,4 +1,5 @@
 embedding_model: sentence-transformers/all-MiniLM-L6-v2
+routing_model: chibao24/model_routing_few_shot
 splitter_chunk_size: 256
 splitter_chunk_overlap: 10
 
@@ -7,7 +8,10 @@ db_faiss_path: data/vectorstores/db_faiss/
 custom_prompt_template_path: config/custom_prompt_template.txt
 openai_max_tokens: 1024
 # openai_model: gpt-3.5-turbo-instruct
-openai_model: gpt-4o
+openai_model: 
+  0: gpt-3.5-turbo-instruct
+  1: gpt-4o
+
 openai_temperature: 0.9
 k_similar: 3
 

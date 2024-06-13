@@ -9,10 +9,12 @@ from langchain.chains import RetrievalQA
 from dotenv import load_dotenv
 load_dotenv()
 
-from src.utils import *
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from src.ingest import VectorDatabase
 from langchain_openai import OpenAI, ChatOpenAI
+from setfit import SetFitModel
+from src.utils import *
+
 
 class RagSystem:
     def __init__(self, data_config_path = 'config/model_config.yaml'):
@@ -21,10 +23,19 @@ class RagSystem:
         self.OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
         self.device = take_device()
         self.prompt = self.set_custom_prompt()
-        self.llm = self.load_llm()
+        self.routing_model = self.load_model_routing()
         self.embeddings = self.load_embeddings()
-        self.qa_result= self.qa_bot()
+        self.vector_db = self.load_vector_db()
         
+    def load_vector_db(self):
+        return FAISS.load_local(self.data_config.get('db_faiss_path'), 
+                                    self.embeddings, 
+                                    allow_dangerous_deserialization=True)
+
+    def load_model_routing(self):
+        routing_model=SetFitModel.from_pretrained(self.data_config["routing_model"])
+        return routing_model
+    
 
     def load_embeddings(self):
         embeddings=HuggingFaceEmbeddings(model_name=self.data_config.get('embedding_model'),
@@ -45,55 +56,47 @@ class RagSystem:
 
         return prompt
 
-    def load_chat_llm(self):
-        llm = ChatOpenAI(model=self.data_config.get('openai_model'),
-                        openai_api_key=self.OPENAI_API_KEY, 
-                        max_tokens = self.data_config.get('openai_max_tokens')//2, #reduce the cost
-                        temperature = self.data_config.get('openai_temperature'),
-                        )
-        return llm
-        
+    def load_llm(self, query:str):
+        model_type = self.data_config.get('openai_model')[self.routing_model.predict([query])[0]]
 
-    def load_llm(self):
-        if self.data_config.get('openai_model')=="gpt-3.5-turbo-instruct":
-            llm = OpenAI(model=self.data_config.get('openai_model'),
+        if model_type=="gpt-3.5-turbo-instruct":
+            llm = OpenAI(model=model_type,
                         openai_api_key=self.OPENAI_API_KEY, 
                         max_tokens = self.data_config.get('openai_max_tokens'),
                         temperature = self.data_config.get('openai_temperature'),
                         )
-        elif self.data_config.get('openai_model') in ["gpt-4o"]: # Will add more later
-            llm=self.load_chat_llm()
+        else:
+            llm = ChatOpenAI(model=model_type,
+                        openai_api_key=self.OPENAI_API_KEY, 
+                        max_tokens = self.data_config.get('openai_max_tokens')//2, #reduce the cost
+                        temperature = self.data_config.get('openai_temperature'),
+                        )
 
-        return llm
+        return llm, model_type
 
-    def retrieval_qa_chain(self, vector_db):
+    def retrieval_qa_chain(self, llm):
         qa_chain=RetrievalQA.from_chain_type(
-        llm= self.llm,
+        llm= llm,
         chain_type="stuff",
-        retriever=vector_db.as_retriever(search_kwargs={'k':self.data_config.get('k_similar')}),
+        retriever=self.vector_db.as_retriever(search_kwargs={'k':self.data_config.get('k_similar')}),
         return_source_documents=True,
         chain_type_kwargs={'prompt':self.prompt }
         )
         return qa_chain
 
-    def qa_bot(self):
-
-        vector_db = FAISS.load_local(self.data_config.get('db_faiss_path'), 
-                                    self.embeddings, 
-                                    allow_dangerous_deserialization=True)
-        qa_chain = self.retrieval_qa_chain(vector_db)                            
-        return qa_chain 
-
 
     def final_result(self, query:str):
-        response=self.qa_result({'query':query})
+        llm, model_type = self.load_llm(query)
+        qa_chain = self.retrieval_qa_chain(llm)  
+        response= qa_chain({'query':query})
+        response['model_type'] = model_type
         return response 
 
     def update_vector_db(self):
         vector_db = VectorDatabase()
-        documents, file_path_list = vector_db.create_vector_db() 
+        _, file_path_list = vector_db.create_vector_db() 
         print('file_path_list', file_path_list)
-        self.qa_result= self.qa_bot()
+        self.vector_db = self.load_vector_db()
         return 
 
 def format_result(result):
