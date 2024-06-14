@@ -38,7 +38,6 @@ Deprecated==1.2.14
 dill==0.3.8
 distro==1.9.0
 docx2txt==0.8
-effdet==0.4.1
 emoji==2.9.0
 evaluate==0.4.2
 exceptiongroup==1.2.0
@@ -245,7 +244,7 @@ text-generation==0.6.1
 threadpoolctl==3.2.0
 tifffile==2024.4.24
 tiktoken==0.7.0
-timm
+timm==0.5.4
 tinysegmenter==0.3
 tldextract==5.1.1
 tokenizers==0.19.1
