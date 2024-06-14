@@ -245,7 +245,7 @@ text-generation==0.6.1
 threadpoolctl==3.2.0
 tifffile==2024.4.24
 tiktoken==0.7.0
-timm==0.5.4
+timm
 tinysegmenter==0.3
 tldextract==5.1.1
 tokenizers==0.19.1

@@ -50,7 +50,7 @@ class VectorDatabase:
         self.data_url = config_parser(data_config_path = data_url_path)
         self.model_config = config_parser(data_config_path = model_config_path)
         self.embeddings = HuggingFaceEmbeddings(model_name=self.model_config.get('embedding_model'),
-                                model_kwargs={'device': take_device()})
+                                                model_kwargs={'device': take_device()})
         
     def _read_data_index(self):
         if os.path.exists(self.data_index_path):
@@ -168,7 +168,8 @@ class VectorDatabase:
             old_db = self.load_vector_db()
             old_db.merge_from(new_db)
             old_db.save_local(self.db_faiss_path)
-        except:
+        except Exception as e:
+            print("Warning Error:", e)
             new_db.save_local(self.db_faiss_path)
 
         print(f"Vector database saved in {self.db_faiss_path}.")
@@ -199,7 +200,9 @@ class VectorDatabase:
     @timeit
     def load_vector_db(self):
         try:
-            database = FAISS.load_local(self.db_faiss_path, self.embeddings)
+            database = FAISS.load_local(self.db_faiss_path, 
+                                        self.embeddings, 
+                                        allow_dangerous_deserialization='True')
         except Exception as e:
             print ('Error:',e)
             return None

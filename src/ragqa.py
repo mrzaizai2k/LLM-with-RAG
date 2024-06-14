@@ -1,6 +1,8 @@
 import sys
 sys.path.append("")
 
+import time
+
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import PromptTemplate
 
@@ -14,7 +16,6 @@ from src.ingest import VectorDatabase
 from langchain_openai import OpenAI, ChatOpenAI
 from setfit import SetFitModel
 from src.utils import *
-import time
 
 class RagSystem:
     def __init__(self, data_config_path = 'config/model_config.yaml'):
@@ -77,12 +78,12 @@ class RagSystem:
 
     def retrieval_qa_chain(self, llm):
         qa_chain=RetrievalQA.from_chain_type(
-        llm= llm,
-        chain_type="stuff",
-        retriever=self.vector_db.as_retriever(search_kwargs={'k':self.data_config.get('k_similar')}),
-        return_source_documents=True,
-        chain_type_kwargs={'prompt':self.prompt }
-        )
+                    llm= llm,
+                    chain_type="stuff",
+                    retriever=self.vector_db.as_retriever(search_kwargs={'k':self.data_config.get('k_similar')}),
+                    return_source_documents=True,
+                    chain_type_kwargs={'prompt':self.prompt }
+                    )
         return qa_chain
 
 
