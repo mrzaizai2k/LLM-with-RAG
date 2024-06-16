@@ -105,7 +105,7 @@ class VectorDatabase:
             try:
                 if f.endswith(".pdf") and not self.is_file_in_db(path):
                     loader = PyMuPDFLoader(path)
-                    documents.extend(loader.load())
+                    documents.extend(combine_short_doc(loader.load(), 100))
                     file_path_list.append(path)
 
                 elif f.endswith(".html") and not self.is_file_in_db(path):

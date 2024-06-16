@@ -83,7 +83,8 @@ class RagSystem:
     def load_retriever(self):
         retriever=self.vector_db.as_retriever(search_kwargs={'k':self.data_config['k_similar'], 
                                                         "search_type": self.data_config['search_type'],
-                                                        "lambda_mult": self.data_config['lambda_mult']})
+                                                        "lambda_mult": self.data_config['lambda_mult'],
+                                                        })
         return retriever
     
 

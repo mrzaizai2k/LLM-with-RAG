@@ -71,3 +71,20 @@ def serialize_document(document):
         'page_content': document.page_content,
         'metadata': document.metadata
     }
+
+def combine_short_doc(ori_text, threshold:int = 100):
+    """Combine short doc into long doc and remove short doc for larger context"""
+    i = 0
+    while i < len(ori_text) - 1:
+        if len(ori_text[i].page_content) < threshold:
+            ori_text[i + 1].page_content = ori_text[i].page_content + " " + ori_text[i + 1].page_content
+            del ori_text[i]
+        else:
+            i += 1
+
+    # Ensure the last item also meets the threshold requirement
+    if len(ori_text[-1].page_content) < threshold and len(ori_text) > 1:
+        ori_text[-2].page_content += " " + ori_text[-1].page_content
+        del ori_text[-1]
+
+    return ori_text
