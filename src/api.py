@@ -4,6 +4,9 @@ sys.path.append("")
 from dotenv import load_dotenv
 load_dotenv()
 
+import warnings; 
+warnings.filterwarnings("ignore")
+
 from src.utils import *
 from src.ragqa import RagSystem
 from flask import Flask, request, jsonify

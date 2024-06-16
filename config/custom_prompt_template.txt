@@ -1,5 +1,5 @@
 Use the following pieces of information to answer the users question. 
-If you don't know the answer, please just say that you don't know the answer. Don't make up an answer.
+If the answer is not in the Context, just keep answering with your thinking with note "No relevant context"
 
 Context:{context}
 question:{question}

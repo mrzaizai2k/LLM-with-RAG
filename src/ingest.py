@@ -2,20 +2,15 @@ import sys
 sys.path.append("")
 
 from langchain_community.document_loaders import (BSHTMLLoader, 
-                                                  DirectoryLoader, 
-                                                  Docx2txtLoader, 
+                                                YoutubeLoader,
+                                                Docx2txtLoader, 
                                                   NewsURLLoader, 
-                                                  PyPDFLoader, 
+                                                  PyMuPDFLoader,
                                                   RecursiveUrlLoader, 
-                                                  SeleniumURLLoader, 
                                                   TextLoader, 
-                                                  UnstructuredHTMLLoader,
-                                                UnstructuredImageLoader,
                                                 UnstructuredPowerPointLoader, 
-                                                UnstructuredURLLoader, 
-                                                UnstructuredWordDocumentLoader, 
-                                                YoutubeLoader)
-from langchain_text_splitters import RecursiveCharacterTextSplitter, TokenTextSplitter
+                                                                   )
+from langchain_text_splitters import TokenTextSplitter, NLTKTextSplitter
 
 import os
 import torch
@@ -109,7 +104,7 @@ class VectorDatabase:
             path = f'{self.data_path}/' + f
             try:
                 if f.endswith(".pdf") and not self.is_file_in_db(path):
-                    loader = PyPDFLoader(path)
+                    loader = PyMuPDFLoader(path)
                     documents.extend(loader.load())
                     file_path_list.append(path)
 
@@ -157,8 +152,9 @@ class VectorDatabase:
 
     
     def _split_documents(self, documents):
-        text_splitter = TokenTextSplitter(chunk_size=self.model_config.get('splitter_chunk_size'),
+        text_splitter = NLTKTextSplitter(chunk_size=self.model_config.get('splitter_chunk_size'),
                                            chunk_overlap=self.model_config.get('splitter_chunk_overlap'))
+                
         texts = text_splitter.split_documents(documents)
         return texts
     

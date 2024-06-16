@@ -2,19 +2,21 @@ import sys
 sys.path.append("")
 
 import time
-
+import warnings
+warnings.filterwarnings("ignore")
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import PromptTemplate
 
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain.chains import RetrievalQA
+
 from dotenv import load_dotenv
 load_dotenv()
 
-from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from src.ingest import VectorDatabase
 from langchain_openai import OpenAI, ChatOpenAI
 from setfit import SetFitModel
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 from src.utils import *
 
 class RagSystem:
@@ -55,7 +57,6 @@ class RagSystem:
             
         prompt = PromptTemplate(template=custom_prompt_template, 
                                 input_variables=['context','question'])
-
         return prompt
 
     def load_llm(self, query:str):
@@ -76,21 +77,41 @@ class RagSystem:
 
         return llm, model_type
 
+    def format_docs(self, docs):
+        return "\n\n".join(doc.page_content for doc in docs)
+    
+    def load_retriever(self):
+        retriever=self.vector_db.as_retriever(search_kwargs={'k':self.data_config['k_similar'], 
+                                                        "search_type": self.data_config['search_type'],
+                                                        "lambda_mult": self.data_config['lambda_mult']})
+        return retriever
+    
+
     def retrieval_qa_chain(self, llm):
-        qa_chain=RetrievalQA.from_chain_type(
-                    llm= llm,
-                    chain_type="stuff",
-                    retriever=self.vector_db.as_retriever(search_kwargs={'k':self.data_config.get('k_similar')}),
-                    return_source_documents=True,
-                    chain_type_kwargs={'prompt':self.prompt }
-                    )
-        return qa_chain
+
+        rag_chain_from_docs = (
+            RunnablePassthrough.assign(context=(lambda x: self.format_docs(x["context"])))
+            | self.prompt
+            | llm
+            | StrOutputParser()
+        )
+
+        retrieve_docs = (lambda x: x["question"]) | self.load_retriever()
+
+        chain = RunnablePassthrough.assign(context=retrieve_docs).assign(
+            answer=rag_chain_from_docs
+        )
+        return chain
 
 
     def final_result(self, query:str):
+        response={}
         llm, model_type = self.load_llm(query)
         qa_chain = self.retrieval_qa_chain(llm)  
-        response= qa_chain({'query':query})
+        result= qa_chain.invoke({"question":f"{query}"})
+        response['query'] = query
+        response['source_documents'] = result['context']
+        response['result'] = result['answer']
         response['model_type'] = model_type
         return response 
 
@@ -104,11 +125,11 @@ class RagSystem:
 
 if __name__ == "__main__":
     rag_system = RagSystem(data_config_path='config/model_config.yaml')
-    rag_system.update_vector_db()
+    # rag_system.update_vector_db()
     while True:
         query=input("Enter your query: ")
         result = rag_system.final_result(query)
-        print('result\n', result)
+        # print('result\n', result)
         print(format_result(result=result))
 
 
