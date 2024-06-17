@@ -24,6 +24,8 @@ from unstructured.cleaners.core import clean_extra_whitespace
 
 from src.utils import *
 
+import nltk
+nltk.download('punkt')
 
 class VectorDatabase:
     def __init__(self, 
