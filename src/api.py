@@ -10,7 +10,8 @@ warnings.filterwarnings("ignore")
 from src.utils import *
 from src.ragqa import RagSystem
 from flask import Flask, request, jsonify
-
+from src.Utils.logger import create_logger
+logger = create_logger()
 
 app = Flask(__name__)
 
@@ -21,6 +22,8 @@ def process_query():
     data = request.get_json()
     query = data.get('query', '')
     result = rag_system.final_result(query)
+    print(format_result(result=result))
+    logger.debug(msg = f"{result}")
     result['source_documents']=[serialize_document(doc) for doc in result['source_documents']] # list(dict)
     return jsonify(result), 200
 
@@ -31,10 +34,14 @@ def update_db():
         # Assuming rag_system is defined somewhere else in your code 
         rag_system.update_vector_db()
         # Returning a response with JSON format for better clarity
-        return jsonify({'message': 'Update successful'}), 200
+        msg = 'Update successful'
+        logger.debug(msg)
+        return jsonify({'message': msg}), 200
     except Exception as e:
         # Returning a meaningful error code and message in case of exceptions
-        return jsonify({'message': 'Internal server error: {}'.format(str(e))}), 500
+        msg = f'Internal server error: {e}'
+        logger.debug(msg)
+        return jsonify({'message': f'Internal server error: {e}'}), 500
 
 
 if __name__ == "__main__":

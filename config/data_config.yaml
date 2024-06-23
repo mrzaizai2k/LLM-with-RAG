@@ -1,6 +1,9 @@
 single_url_list: # data from single url. https://python.langchain.com/docs/integrations/document_loaders/news
-  # - https://vnexpress.net/viet-nam-len-tieng-ve-viec-trung-quoc-chiem-doat-hoang-sa-4703117.html
+  - https://vnexpress.net/viet-nam-len-tieng-ve-viec-trung-quoc-chiem-doat-hoang-sa-4703117.html
   - https://e.vnexpress.net/news/business/companies/airlines-ramp-up-night-flights-but-passengers-not-keen-4758002.html
+  - https://vnexpress.net/viet-nam-keu-goi-trung-quoc-philippines-kiem-che-toi-da-tren-bien-dong-4760997.html
+  - https://vnexpress.net/chu-tich-nuoc-sap-chu-tri-le-don-tong-thong-putin-4760496-tong-thuat.html
+  - https://vnexpress.net/khoanh-khac-tau-hang-phat-no-do-trung-don-cua-houthi-4760940.html
 
 
 

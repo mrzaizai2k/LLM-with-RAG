@@ -23,6 +23,7 @@ from langchain_community.vectorstores import FAISS
 from unstructured.cleaners.core import clean_extra_whitespace
 
 from src.utils import *
+from src.data_processing import MathLatexRecovery
 
 import nltk
 nltk.download('punkt')
@@ -41,6 +42,7 @@ class VectorDatabase:
         self.device = take_device()
         self.data_index_path = data_index_path
         self.data_index = self._read_data_index()
+        self.data_index_set = set(self.data_index['file_path'].values) 
         
         check_path(self.data_path)
         
@@ -48,6 +50,7 @@ class VectorDatabase:
         self.model_config = config_parser(data_config_path = model_config_path)
         self.embeddings = HuggingFaceEmbeddings(model_name=self.model_config.get('embedding_model'),
                                                 model_kwargs={'device': take_device()})
+        self.math_processor = MathLatexRecovery()
         
     def _read_data_index(self):
         if os.path.exists(self.data_index_path):
@@ -59,7 +62,10 @@ class VectorDatabase:
         return data_index
     
     def is_file_in_db(self, file_path):
-        return file_path in self.data_index['file_path'].values
+        return file_path in self.data_index_set
+    
+    def files_not_in_db(self, data_index_set:set, dir_list:list):
+        return [link for link in dir_list if link not in data_index_set]
 
 
     def read_url_data(self):
@@ -68,77 +74,79 @@ class VectorDatabase:
 
         single_url_list = self.data_url.get('single_url_list')
         if single_url_list:
-            for link in single_url_list:
-                if not self.is_file_in_db(str(link)):
-                    loader = NewsURLLoader(urls=[link], 
-                                        post_processors=[clean_extra_whitespace],)
-                    documents.extend(loader.load())
-                    file_path_list.extend([link])
+            links_to_crawl = self.files_not_in_db(self.data_index_set, single_url_list)
+            loader = NewsURLLoader(urls=links_to_crawl, 
+                                post_processors=[clean_extra_whitespace],)
+            documents.extend(loader.load())
+            file_path_list.extend(links_to_crawl)
 
 
         youtube_url_list = self.data_url.get('youtube_url_list')
         if youtube_url_list:
-            for link in youtube_url_list:
-                if not self.is_file_in_db(str(link)): 
-                    loader = YoutubeLoader.from_youtube_url(
-                        link, add_video_info=False
-                    )
-                    documents.extend(loader.load())
-                    file_path_list.append(link)
+            links_to_crawl = self.files_not_in_db(self.data_index_set, youtube_url_list)
+            for link in links_to_crawl:
+                loader = YoutubeLoader.from_youtube_url(
+                    link, add_video_info=False
+                )
+                documents.extend(loader.load())
+                file_path_list.append(link)
         
         recursive_url_list = self.data_url.get('recursive_url_list')
         if recursive_url_list :
-            for link in recursive_url_list:
-                if not self.is_file_in_db(str(link)):
-                    loader = RecursiveUrlLoader(
-                        url=link, max_depth=2,
-                        extractor=lambda x: Soup(x, "html.parser").text,
-                    )
-                    documents.extend(loader.load())
-                    file_path_list.append(link)
+            links_to_crawl = self.files_not_in_db(self.data_index_set, recursive_url_list)
+            for link in links_to_crawl:
+                loader = RecursiveUrlLoader(
+                    url=link, max_depth=2,
+                    extractor=lambda x: Soup(x, "html.parser").text,
+                )
+                documents.extend(loader.load())
+                file_path_list.append(link)
         return documents, file_path_list
 
     def read_file_data(self):
         documents = []
         file_path_list = []
+        file_paths = get_all_dir(root_dir=self.data_path, sort=False)
+        file_paths_filtered = self.files_not_in_db(self.data_index_set, file_paths)
 
-        for f in os.listdir(self.data_path):
-            path = f'{self.data_path}/' + f
+        for file in file_paths_filtered:
             try:
-                if f.endswith(".pdf") and not self.is_file_in_db(path):
-                    loader = PyMuPDFLoader(path)
-                    documents.extend(combine_short_doc(loader.load(), 100))
-                    file_path_list.append(path)
+                if file.endswith(".pdf"):
+                    loader = PyMuPDFLoader(file)
+                    ori_docs = combine_short_doc(loader.load(), threshold=100)
+                    processed_docs = self.math_processor.recover_math(documents=ori_docs) 
+                    documents.extend(processed_docs)
+                    file_path_list.append(file)
 
-                elif f.endswith(".html") and not self.is_file_in_db(path):
-                    loader = BSHTMLLoader(path)
+                elif file.endswith(".html"):
+                    loader = BSHTMLLoader(file)
                     documents.extend(loader.load())
-                    file_path_list.append(path)
+                    file_path_list.append(file)
 
-                elif f.endswith(".docx") and not self.is_file_in_db(path):
-                    loader = Docx2txtLoader(path)
+                elif file.endswith(".docx"):
+                    loader = Docx2txtLoader(file)
                     documents.extend(loader.load())
-                    file_path_list.append(path)
+                    file_path_list.append(file)
 
-                elif (f.endswith(".txt") or f.endswith(".md")) and not self.is_file_in_db(path):
-                    loader = TextLoader(path)
+                elif (file.endswith(".txt") or file.endswith(".md")):
+                    loader = TextLoader(file)
                     documents.extend(loader.load())
-                    file_path_list.append(path)
+                    file_path_list.append(file)
                 
-                elif f.endswith(".ppt") or f.endswith(".pptx") and not self.is_file_in_db(path):
+                elif file.endswith(".ppt") or file.endswith(".pptx"):
                     
-                    if f.endswith(".ppt"):
+                    if file.endswith(".ppt"):
                         # Change the file name to "name.pptx"
-                        new_path = os.path.join(os.path.dirname(path), os.path.splitext(f)[0] + ".pptx")
+                        new_path = os.path.join(os.path.dirname(file), os.path.splitext(file)[0] + ".pptx")
 
                         # Rename the file
-                        os.rename(path, new_path)
-                    loader = UnstructuredPowerPointLoader(path)
+                        os.rename(file, new_path)
+                    loader = UnstructuredPowerPointLoader(file)
                     documents.extend(loader.load())
-                    file_path_list.append(path)
+                    file_path_list.append(file)
 
             except Exception as e:
-                print("issue with ",f)
+                print("issue with ",file)
                 print('Error:',e)
                 pass
         return documents, file_path_list
@@ -209,6 +217,7 @@ class VectorDatabase:
 
 def main():
     vector_db = VectorDatabase()
+    vector_db.load_vector_db()
     documents, file_path_list = vector_db.create_vector_db() 
     print('file_path_list', file_path_list)
 

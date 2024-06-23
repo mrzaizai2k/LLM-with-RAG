@@ -40,6 +40,7 @@ class RagSystem:
         routing_model.predict(["who is karger"]) #load the dummy input
         return routing_model
     
+    
 
     def load_embeddings(self):
         embeddings=HuggingFaceEmbeddings(model_name=self.data_config.get('embedding_model'),
@@ -97,12 +98,13 @@ class RagSystem:
             | StrOutputParser()
         )
 
-        retrieve_docs = (lambda x: x["question"]) | self.load_retriever()
+        retrieve_docs = (lambda x: x["question"]) | self.load_retriever() 
 
         chain = RunnablePassthrough.assign(context=retrieve_docs).assign(
             answer=rag_chain_from_docs
         )
         return chain
+
 
 
     def final_result(self, query:str):

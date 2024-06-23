@@ -4,6 +4,10 @@ import os
 import  torch
 import yaml
 import time 
+from natsort import natsorted
+from langchain_community.document_loaders import PyMuPDFLoader
+                                                 
+
 
 def serialize_document(document):
     return {
@@ -88,3 +92,13 @@ def combine_short_doc(ori_text, threshold:int = 100):
         del ori_text[-1]
 
     return ori_text
+
+def get_all_dir(root_dir, sort=True):
+    # Get the list of items in the directory
+    items = os.listdir(root_dir)
+    # Sort the items list in natural order
+    if sort:
+        items = natsorted(items)
+    # Create full paths
+    image_list = [os.path.join(root_dir, item) for item in items]
+    return image_list

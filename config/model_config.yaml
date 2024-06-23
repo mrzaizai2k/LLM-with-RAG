@@ -17,3 +17,8 @@ k_similar: 5
 lambda_mult: 0.7
 search_type: mmr
 
+ocr_model: facebook/nougat-small
+ocr_model_max_new_tokens: 1024
+
+math_classifier: CrissWang/bert-math
+
