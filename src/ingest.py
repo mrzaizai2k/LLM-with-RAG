@@ -114,9 +114,10 @@ class VectorDatabase:
             try:
                 if file.endswith(".pdf"):
                     loader = PyMuPDFLoader(file)
-                    ori_docs = combine_short_doc(loader.load(), threshold=100)
-                    processed_docs = self.math_processor.recover_math(documents=ori_docs) 
-                    documents.extend(processed_docs)
+                    ori_text, _ = remove_duplicate_documents(loader.load())
+                    processed_docs = self.math_processor.recover_math(documents=ori_text) 
+                    combined_docs = combine_short_doc(processed_docs, threshold=100)
+                    documents.extend(combined_docs)
                     file_path_list.append(file)
 
                 elif file.endswith(".html"):
@@ -182,7 +183,6 @@ class VectorDatabase:
         print(f"Vector database saved in {self.db_faiss_path}.")
 
 
-
     def save_data_index(self, file_path_list):
         data_index = self._read_data_index()
         current_date = datetime.now().strftime('%Y-%m-%d')
@@ -214,7 +214,6 @@ class VectorDatabase:
             print(f"Done processing! {len(documents)} documents processed in total.")
         return documents, file_path_list
 
-    @timeit
     def load_vector_db(self):
         try:
             database = FAISS.load_local(self.db_faiss_path, 
@@ -227,7 +226,8 @@ class VectorDatabase:
     
 
 def main():
-    vector_db = VectorDatabase()
+    vector_db = VectorDatabase(data_index_path = 'data/data_index_3.csv',
+                            db_faiss_path = 'data/vectorstores/db_faiss_3/', )
     vector_db.load_vector_db()
     documents, file_path_list = vector_db.create_vector_db() 
     print('file_path_list', file_path_list)

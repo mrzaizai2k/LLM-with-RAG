@@ -4,6 +4,7 @@ import os
 import  torch
 import yaml
 import time 
+import shutil
 from natsort import natsorted
 from langchain_community.document_loaders import PyMuPDFLoader
                                                  
@@ -102,3 +103,50 @@ def get_all_dir(root_dir, sort=True):
     # Create full paths
     image_list = [os.path.join(root_dir, item) for item in items]
     return image_list
+
+def remove_duplicate_documents(documents):
+    """Deduplicate documents by their page content"""
+    unique_contents = set()
+    unique_documents = []
+    duplicate_count = 0
+
+    for doc in documents:
+        content = doc.page_content
+        if content not in unique_contents:
+            unique_contents.add(content)
+            unique_documents.append(doc)
+        else:
+            duplicate_count += 1
+    if duplicate_count > 0:
+        print(f"Number of duplicate documents removed: {duplicate_count}")
+    return unique_documents, duplicate_count
+
+def remove_short_documents(documents, threshold:int=3):
+    """Remove documents with page content length less than the threshold"""
+    filtered_documents = []
+    removed_count = 0
+
+    for doc in documents:
+        if len(doc.page_content) >= threshold:
+            filtered_documents.append(doc)
+        else:
+            removed_count += 1
+
+    print(f"Number of short documents removed: {removed_count}")
+    return filtered_documents
+
+def remove_and_recreate_folder(folder_path):
+    # Check if the folder exists
+    if os.path.exists(folder_path):
+        # Remove the folder and all its contents
+        shutil.rmtree(folder_path)
+    # Recreate the folder
+    os.makedirs(folder_path)
+
+def is_latex_format(doc):
+    # Check if doc.metadata exists and is a dictionary
+    if not hasattr(doc, 'metadata') or not isinstance(doc.metadata, dict):
+        return False
+    
+    # Check for "tex" in any metadata value (case-insensitive)
+    return any("tex" in str(value).lower() for value in doc.metadata.values())

@@ -53,29 +53,48 @@ class MathLatexRecovery:
     def save_math_doc_image(self, math_indices, pdf_path):
         doc = pymupdf.open(pdf_path)  # open document
         os.makedirs(self.tmp_path, exist_ok=True)
+        image_paths = []
         for page in doc:  # iterate through the pages
             if not (page.number in math_indices):
                 continue
             pix = page.get_pixmap()  # render page to an image
-            pix.save(f"{self.tmp_path}/%i.png" % page.number)  # store image as a PNG
-        return 
+            save_path = f"{self.tmp_path}/%i.png" % page.number
+            pix.save(save_path)  # store image as a PNG
+            image_paths.append(save_path)
+        return image_paths
     
-    def get_math_ocr(self, image_list, batch_size=8,) -> list:
-        return self.ocr_model(image_list, batch_size=batch_size)
-    
-    def _remove_and_recreate_folder(self):
-        # Check if the folder exists
-        if os.path.exists(self.tmp_path):
-            # Remove the folder and all its contents
-            shutil.rmtree(self.tmp_path)
-        
-        # Recreate the folder
-        os.makedirs(self.tmp_path)
+    def remove_short_generated_texts(self, documents, threshold:int = 5)->list:
+        """Remove elements with generated_text length less than the threshold"""
+        filtered_documents = []
 
-    def update_documents(self, ori_documents, math_indices:list, math_ocr_outputs:list):
-        for i, idx in enumerate(math_indices):
-            ori_documents[idx].page_content = math_ocr_outputs[i][0]["generated_text"]
+        for doc_list in documents:
+            # Filter the list of dictionaries
+            filtered_doc_list = [
+                doc for doc in doc_list if len(doc['generated_text'].strip()) >= threshold
+            ]
+            # Add the filtered list to the final list if not empty
+            if filtered_doc_list:
+                filtered_documents.append(filtered_doc_list)
+
+        return filtered_documents
+
+    def get_math_ocr(self, image_list, batch_size=8,) -> list:
+        ocr_texts = self.ocr_model(image_list, batch_size=batch_size)
+        ocr_texts = self.add_index_to_gen_docs(ocr_texts)
+        ocr_texts = self.remove_short_generated_texts(ocr_texts)
+        return ocr_texts
+
+    def update_documents(self, ori_documents, ocr_outputs:list):
+        for i, item in enumerate(ocr_outputs):
+            idx = int(item[0]['index'])
+            ori_documents[idx].page_content = ocr_outputs[i][0]["generated_text"]
         return ori_documents
+
+    def add_index_to_gen_docs(self, ocr_texts):
+        for i, index in enumerate(self.math_indices):
+            for item in ocr_texts[i]:
+                item['index'] = index
+        return ocr_texts
     
     def recover_math(self, documents):
         self.math_indices = []
@@ -84,22 +103,20 @@ class MathLatexRecovery:
         self.math_indices = self.get_math_indices(text_list=text_list,batch_size=8, truncation="only_first")
         if not self.math_indices:
             return documents
-        
         print(f"There are {len(self.math_indices)} / {len(text_list)} pages has math")
-        self.save_math_doc_image(math_indices=self.math_indices, pdf_path=pdf_path)
-        image_paths = get_all_dir(root_dir=self.tmp_path, sort = True)
+        image_paths = self.save_math_doc_image(math_indices=self.math_indices, pdf_path=pdf_path)
         ocr_texts = self.get_math_ocr(image_list = image_paths, batch_size=8)
-        outputs = self.update_documents(ori_documents=documents, math_indices=self.math_indices, math_ocr_outputs=ocr_texts)
-        self._remove_and_recreate_folder()
+        outputs = self.update_documents(ori_documents=documents, ocr_outputs=ocr_texts)
+        remove_and_recreate_folder(folder_path=self.tmp_path)
         return outputs
         
 
 if __name__ == "__main__":
-    pdf_path = "data/web_data/Random variable.pdf"
+    pdf_path = "data/web_data/Lecture 3.pdf"
     loader = PyMuPDFLoader(pdf_path)
     ori_text = loader.load()
-    ori_text = combine_short_doc(ori_text, 100)
-    
+    ori_text, duplicate_count = remove_duplicate_documents(ori_text)
     post_processor = MathLatexRecovery()
-    outputs = post_processor.recover_math(ori_text)
+    outputs = post_processor.recover_math(ori_text[:15])
+    combined_docs = combine_short_doc(outputs, 100)
     print("outputs[:5]",outputs[:5])
