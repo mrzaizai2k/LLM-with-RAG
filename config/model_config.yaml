@@ -1,6 +1,6 @@
-embedding_model: sentence-transformers/all-MiniLM-L6-v2
+embedding_model: sentence-transformers/stsb-xlm-r-multilingual
 routing_model: chibao24/model_routing_few_shot
-splitter_chunk_size: 500
+splitter_chunk_size: 700 # Must check carefully on the embedding model
 splitter_chunk_overlap: 100
 
 db_faiss_path: data/vectorstores/db_faiss/
@@ -13,7 +13,9 @@ openai_model:
   1: gpt-4o
 
 openai_temperature: 0.9
-k_similar: 5
+k_similar: 15
+k_similar_rerank: 5
+
 lambda_mult: 0.7
 search_type: mmr
 
@@ -21,4 +23,5 @@ ocr_model: facebook/nougat-small
 ocr_model_max_new_tokens: 1024
 
 math_classifier: CrissWang/bert-math
+rerank_model: sentence-transformers/stsb-xlm-r-multilingual
 

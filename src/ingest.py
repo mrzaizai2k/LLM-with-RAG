@@ -49,7 +49,8 @@ class VectorDatabase:
         self.data_url = config_parser(data_config_path = data_url_path)
         self.model_config = config_parser(data_config_path = model_config_path)
         self.embeddings = HuggingFaceEmbeddings(model_name=self.model_config.get('embedding_model'),
-                                                model_kwargs={'device': take_device()})
+                                                model_kwargs={'device': take_device()},
+                                                encode_kwargs={"batch_size": 8},)
         self.math_processor = MathLatexRecovery()
         
     def _read_data_index(self):
@@ -193,16 +194,26 @@ class VectorDatabase:
         data_index.to_csv(self.data_index_path, index=False)
         print (f'Data index saved to CSV in {self.data_index_path}')
 
+    
+    def chunk_list(self, lst, n):
+        """Split a list into chunks of size n."""
+        for i in range(0, len(lst), n):
+            yield lst[i:i + n]
+    
     @timeit
     def create_vector_db(self):
         documents, file_path_list = self.read_data()
         if documents:
-            texts = self._split_documents(documents)
-            self.save_vector_database(texts)
-            self.save_data_index(file_path_list)
-            print(f"Done processing! {len(documents)} documents processed.")
+            chunk_size = 2500
+            for i, document_chunk in enumerate(self.chunk_list(documents, chunk_size)):
+                texts = self._split_documents(document_chunk)
+                self.save_vector_database(texts)
+                chunk_file_paths = file_path_list[i*chunk_size:(i+1)*chunk_size]
+                self.save_data_index(chunk_file_paths)
+                print(f"Processed chunk {i + 1}: {len(document_chunk)} documents processed.")
+            print(f"Done processing! {len(documents)} documents processed in total.")
         return documents, file_path_list
-    
+
     @timeit
     def load_vector_db(self):
         try:

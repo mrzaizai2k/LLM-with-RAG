@@ -17,6 +17,8 @@ from langchain_openai import OpenAI, ChatOpenAI
 from setfit import SetFitModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
+from sentence_transformers import SentenceTransformer, util
+
 from src.utils import *
 
 class RagSystem:
@@ -27,8 +29,10 @@ class RagSystem:
         self.device = take_device()
         self.prompt = self.set_custom_prompt()
         self.routing_model = self.load_model_routing()
+        self.rerank_model = self.load_rerank_model()
         self.embeddings = self.load_embeddings()
         self.vector_db = self.load_vector_db()
+        self.retriever = self.load_retriever()
         
     def load_vector_db(self):
         return FAISS.load_local(self.data_config.get('db_faiss_path'), 
@@ -36,11 +40,14 @@ class RagSystem:
                                     allow_dangerous_deserialization=True)
 
     def load_model_routing(self):
-        routing_model=SetFitModel.from_pretrained(self.data_config["routing_model"]).to(self.device)
+        routing_model=SetFitModel.from_pretrained(self.data_config["routing_model"], force_download=False).to(self.device)
         routing_model.predict(["who is karger"]) #load the dummy input
         return routing_model
     
-    
+    def load_rerank_model(self):
+        rerank_model = SentenceTransformer(self.data_config.get('rerank_model'), device= self.device)
+        return rerank_model
+
 
     def load_embeddings(self):
         embeddings=HuggingFaceEmbeddings(model_name=self.data_config.get('embedding_model'),
@@ -91,31 +98,48 @@ class RagSystem:
 
     def retrieval_qa_chain(self, llm):
 
-        rag_chain_from_docs = (
-            RunnablePassthrough.assign(context=(lambda x: self.format_docs(x["context"])))
-            | self.prompt
+        chain = (
+             self.prompt
             | llm
             | StrOutputParser()
         )
 
-        retrieve_docs = (lambda x: x["question"]) | self.load_retriever() 
-
-        chain = RunnablePassthrough.assign(context=retrieve_docs).assign(
-            answer=rag_chain_from_docs
-        )
         return chain
 
+    @timeit
+    def rerank_document_similarity(self, query, ori_documents, n_docs:int = None):
+        documents = ori_documents.copy()
+        docs_txt_list  = [txt.page_content for txt in documents]
+        query_embedding = self.rerank_model.encode(query)
+        passage_embedding = self.rerank_model.encode(docs_txt_list)
 
+        similarity_scores = util.dot_score(query_embedding, passage_embedding)
+        _, sorted_indices = torch.sort(similarity_scores, descending=True)
+        print(f"sorted_indices: {sorted_indices}")
+
+        # Sort the original list of texts based on the sorted indices
+        rerank_documents = [documents[idx] for idx in sorted_indices.tolist()[0]]
+        if n_docs:
+            rerank_documents = rerank_documents[:n_docs]
+        return rerank_documents
+
+    def _format_result(self, query, source_documents, answer, model_type):
+        response={}
+        response['query'] = query
+        response['source_documents'] = source_documents
+        response['result'] = answer
+        response['model_type'] = model_type
+        return response
 
     def final_result(self, query:str):
-        response={}
         llm, model_type = self.load_llm(query)
+        relevant_docs = self.retriever.get_relevant_documents(query)
+        rerank_documents = self.rerank_document_similarity(query = query, ori_documents=relevant_docs, 
+                                                           n_docs=self.data_config['k_similar_rerank'])
+        docs_txt = self.format_docs(rerank_documents)
         qa_chain = self.retrieval_qa_chain(llm)  
-        result= qa_chain.invoke({"question":f"{query}"})
-        response['query'] = query
-        response['source_documents'] = result['context']
-        response['result'] = result['answer']
-        response['model_type'] = model_type
+        result= qa_chain.invoke({"question": query, "context": docs_txt})
+        response = self._format_result(query, rerank_documents, result, model_type) 
         return response 
 
     def update_vector_db(self):
