@@ -18,6 +18,7 @@ from setfit import SetFitModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from sentence_transformers import SentenceTransformer, util
+from langchain_community.retrievers import TavilySearchAPIRetriever
 
 from src.utils import *
 
@@ -26,6 +27,7 @@ class RagSystem:
         self.data_config_path = data_config_path
         self.data_config = config_parser(data_config_path = 'config/model_config.yaml')
         self.OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+        self.TAVILY_KEY = os.getenv('TAVILY_KEY')
         self.device = take_device()
         self.prompt = self.set_custom_prompt()
         self.routing_model = self.load_model_routing()
@@ -33,6 +35,7 @@ class RagSystem:
         self.embeddings = self.load_embeddings()
         self.vector_db = self.load_vector_db()
         self.retriever = self.load_retriever()
+        self.web_retriever = self.load_web_retriever()
         
     def load_vector_db(self):
         return FAISS.load_local(self.data_config.get('db_faiss_path'), 
@@ -79,7 +82,7 @@ class RagSystem:
         else:
             llm = ChatOpenAI(model=model_type,
                         openai_api_key=self.OPENAI_API_KEY, 
-                        max_tokens = self.data_config.get('openai_max_tokens')//2, #reduce the cost
+                        max_tokens = self.data_config.get('openai_max_tokens'), #reduce the cost
                         temperature = self.data_config.get('openai_temperature'),
                         )
 
@@ -95,6 +98,9 @@ class RagSystem:
                                                         })
         return retriever
     
+    def load_web_retriever(self):
+        retriever = TavilySearchAPIRetriever(k=2, api_key=self.TAVILY_KEY)
+        return retriever
 
     def retrieval_qa_chain(self, llm):
 
@@ -103,7 +109,6 @@ class RagSystem:
             | llm
             | StrOutputParser()
         )
-
         return chain
 
     @timeit
@@ -114,14 +119,14 @@ class RagSystem:
         passage_embedding = self.rerank_model.encode(docs_txt_list)
 
         similarity_scores = util.dot_score(query_embedding, passage_embedding)
-        _, sorted_indices = torch.sort(similarity_scores, descending=True)
+        similarity_scores, sorted_indices = torch.sort(similarity_scores, descending=True)
         print(f"sorted_indices: {sorted_indices}")
 
         # Sort the original list of texts based on the sorted indices
         rerank_documents = [documents[idx] for idx in sorted_indices.tolist()[0]]
         if n_docs:
             rerank_documents = rerank_documents[:n_docs]
-        return rerank_documents
+        return similarity_scores, rerank_documents
 
     def _format_result(self, query, source_documents, answer, model_type):
         response={}
@@ -133,9 +138,17 @@ class RagSystem:
 
     def final_result(self, query:str):
         llm, model_type = self.load_llm(query)
+
+        if model_type != "gpt-3.5-turbo-instruct":
+            print("use rag fusion")
+
         relevant_docs = self.retriever.get_relevant_documents(query)
-        rerank_documents = self.rerank_document_similarity(query = query, ori_documents=relevant_docs, 
+        similarity_scores, rerank_documents = self.rerank_document_similarity(query = query, ori_documents=relevant_docs, 
                                                            n_docs=self.data_config['k_similar_rerank'])
+        if similarity_scores[0][0] < 0.5: #check max score
+            web_docs = self.web_retriever.invoke(query)
+            rerank_documents.extend(web_docs)
+
         docs_txt = self.format_docs(rerank_documents)
         qa_chain = self.retrieval_qa_chain(llm)  
         result= qa_chain.invoke({"question": query, "context": docs_txt})

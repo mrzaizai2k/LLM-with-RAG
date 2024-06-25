@@ -3,7 +3,8 @@ sentence_model: sentence-transformers/all-MiniLM-L6-v2
 test_size: 0.25
 batch_size: 4
 num_epochs: 4
-push_to_hub: False
+push_to_hub: True
 huggingface_out_dir: chibao24/model_routing_few_shot
 text_col_name: text
 label_col_name: label
+local_data_path: data/gpt_routing.xlsx

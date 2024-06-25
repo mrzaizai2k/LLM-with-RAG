@@ -5,6 +5,7 @@ import  torch
 import yaml
 import time 
 import shutil
+import re
 from natsort import natsorted
 from langchain_community.document_loaders import PyMuPDFLoader
                                                  
@@ -67,6 +68,7 @@ def config_parser(data_config_path = 'config/config.yaml'):
 
 def format_result(result):
     print(f"result: {result['result']}")
+    print(f"model_type: {result['model_type']}")
     for i, doc in enumerate(result['source_documents']):
         print(f'--page_content {i}: {doc.page_content}')
         print(f'--metadata {i}: {doc.metadata}')
@@ -150,3 +152,80 @@ def is_latex_format(doc):
     
     # Check for "tex" in any metadata value (case-insensitive)
     return any("tex" in str(value).lower() for value in doc.metadata.values())
+
+def remove_repetitive_patterns(text:str):
+    # Define regex patterns to match repetitive sequences
+    patterns = [
+        r'(.\n\n)+',                      # Matches repetitive sequences of ".\n"
+        r'(\\\(T\\.\\\)\\\(\\.\\\))+',   # Matches repetitive sequences of "\(T.\)\(.\)"
+        r'(\w+)\1+'                      # Matches repetitive sequences of a word
+    ]
+    
+    # Process each pattern and replace it with a single instance
+    for pattern in patterns:
+        text = re.sub(pattern, r'\1', text)
+    
+    return text
+
+def find_common_prefix(strings, threshold=0.7):
+    if not strings:
+        return ""
+
+    # Count occurrences of each prefix
+    prefix_counts = {}
+    total_strings = len(strings)
+
+    for s in strings:
+        for i in range(1, len(s) + 1):
+            prefix = s[:i]
+            if prefix in prefix_counts:
+                prefix_counts[prefix] += 1
+            else:
+                prefix_counts[prefix] = 1
+
+    # Calculate the minimum occurrence threshold
+    min_occurrences = int(total_strings * threshold)
+
+    # Find the longest prefix that appears at least `min_occurrences` times
+    common_prefix = ""
+    for prefix, count in prefix_counts.items():
+        if count >= min_occurrences and len(prefix) > len(common_prefix):
+            common_prefix = prefix
+
+    return common_prefix
+
+
+def remove_common_prefix_from_documents(documents, 
+                                        max_len_documents:int = 200,
+                                        common_prefix_threshold:float = 0.7):
+    """
+    Removes the longest common prefix from a list of documents, optimizing for efficiency with large datasets.
+
+    This function aims to streamline document processing by removing any repeated introductory text (header) shared across a majority (default 70%) of the documents. This can improve subsequent analysis or summarization tasks by focusing on the unique content within each document.
+
+    **Parameters:**
+
+    - documents (list): A list of document objects, each likely containing a `page_content` attribute holding textual content.
+    - max_len_documents (int, optional): A threshold to limit processing for large datasets. If the number of documents exceeds this threshold, the original documents are returned unmodified (default is 200). This helps prevent performance issues when working with extensive collections.
+
+    **Returns:**
+
+    - list: The modified list of documents with their common prefix removed, if a prefix was found and removed. Otherwise, the original documents are returned.
+
+    **Note:**
+
+    - The specific mechanism for accessing document content (`page_content` in this example) may vary depending on your document object implementation. Please adjust the attribute name accordingly.
+    """
+    if len(documents) > max_len_documents:
+        return documents
+    
+    # Extract page content from each document
+    strs = [doc.page_content for doc in documents]
+
+    # Find the longest common prefix
+    common_prefix = find_common_prefix(strs, threshold=common_prefix_threshold)
+    # Remove the common prefix from each document's content
+    for doc in documents:
+        doc.page_content = doc.page_content[len(common_prefix):]
+
+    return documents

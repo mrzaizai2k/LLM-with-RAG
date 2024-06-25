@@ -114,8 +114,12 @@ class VectorDatabase:
             try:
                 if file.endswith(".pdf"):
                     loader = PyMuPDFLoader(file)
-                    ori_text, _ = remove_duplicate_documents(loader.load())
-                    processed_docs = self.math_processor.recover_math(documents=ori_text) 
+
+                    ori_docs, _ = remove_duplicate_documents(loader.load())
+                    ori_docs = remove_common_prefix_from_documents(ori_docs)
+                    for doc in ori_docs:
+                        doc.page_content = remove_repetitive_patterns(text = doc.page_content)
+                    processed_docs = self.math_processor.recover_math(documents=ori_docs) 
                     combined_docs = combine_short_doc(processed_docs, threshold=100)
                     documents.extend(combined_docs)
                     file_path_list.append(file)
@@ -226,8 +230,8 @@ class VectorDatabase:
     
 
 def main():
-    vector_db = VectorDatabase(data_index_path = 'data/data_index_3.csv',
-                            db_faiss_path = 'data/vectorstores/db_faiss_3/', )
+    vector_db = VectorDatabase(data_index_path = 'data/data_index_4.csv',
+                            db_faiss_path = 'data/vectorstores/db_faiss_4/', )
     vector_db.load_vector_db()
     documents, file_path_list = vector_db.create_vector_db() 
     print('file_path_list', file_path_list)

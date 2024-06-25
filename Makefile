@@ -26,4 +26,7 @@ test:
 	curl -X POST -H "Content-Type: application/json" -d '{"query": "who is karger"}' http://localhost:8083/query
 	curl -X POST http://localhost:8083/update
 
+rout_train:
+	python src/push_dataset.py
+	python src/train_gpt_routing.py
 # python3 src/test_api.py
