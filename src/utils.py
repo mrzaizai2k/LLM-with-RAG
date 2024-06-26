@@ -158,7 +158,8 @@ def remove_repetitive_patterns(text:str):
     patterns = [
         r'(.\n\n)+',                      # Matches repetitive sequences of ".\n"
         r'(\\\(T\\.\\\)\\\(\\.\\\))+',   # Matches repetitive sequences of "\(T.\)\(.\)"
-        r'(\w+)\1+'                      # Matches repetitive sequences of a word
+        r'(\w+)\1+',                      # Matches repetitive sequences of a word
+        r'(\\!)+',
     ]
     
     # Process each pattern and replace it with a single instance

@@ -102,10 +102,10 @@ class RagSystem:
         retriever = TavilySearchAPIRetriever(k=2, api_key=self.TAVILY_KEY)
         return retriever
 
-    def retrieval_qa_chain(self, llm):
+    def retrieval_qa_chain(self, llm, prompt):
 
         chain = (
-             self.prompt
+             prompt
             | llm
             | StrOutputParser()
         )
@@ -145,13 +145,13 @@ class RagSystem:
         relevant_docs = self.retriever.get_relevant_documents(query)
         similarity_scores, rerank_documents = self.rerank_document_similarity(query = query, ori_documents=relevant_docs, 
                                                            n_docs=self.data_config['k_similar_rerank'])
-        if similarity_scores[0][0] < 0.5: #check max score
+        
+        if similarity_scores[0][0] < self.data_config['web_search_thresh']: #check max score
             web_docs = self.web_retriever.invoke(query)
             rerank_documents.extend(web_docs)
 
-        docs_txt = self.format_docs(rerank_documents)
-        qa_chain = self.retrieval_qa_chain(llm)  
-        result= qa_chain.invoke({"question": query, "context": docs_txt})
+        qa_chain = self.retrieval_qa_chain(llm, self.prompt)  
+        result= qa_chain.invoke({"question": query, "context": self.format_docs(rerank_documents)})
         response = self._format_result(query, rerank_documents, result, model_type) 
         return response 
 

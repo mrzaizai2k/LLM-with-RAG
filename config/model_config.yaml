@@ -3,7 +3,7 @@ routing_model: chibao24/model_routing_few_shot
 splitter_chunk_size: 500 # Must check carefully on the embedding model
 splitter_chunk_overlap: 100
 
-db_faiss_path: data/vectorstores/db_faiss_3/
+db_faiss_path: data/vectorstores/db_faiss_4/
 
 custom_prompt_template_path: config/custom_prompt_template.txt
 openai_max_tokens: 1024
@@ -19,9 +19,12 @@ k_similar_rerank: 5
 lambda_mult: 0.7
 search_type: mmr
 
+web_search_thresh: 0.45
+
 ocr_model: facebook/nougat-base
 ocr_model_max_new_tokens: 1024
 
 math_classifier: CrissWang/bert-math
-rerank_model: sentence-transformers/distiluse-base-multilingual-cased-v2
+rerank_model: BAAI/bge-m3
 
+# sentence-transformers/distiluse-base-multilingual-cased-v2
