@@ -4,7 +4,7 @@ sys.path.append("")
 from dotenv import load_dotenv
 load_dotenv()
 
-from src.utils import *
+from Utils.utils import *
 from src.ragqa import *
 
 import requests

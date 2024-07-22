@@ -172,3 +172,8 @@ checkpoints/
 True/
 logging/
 log.txt
+model/
+docs/
+venv/
+*.png
+*.jpg

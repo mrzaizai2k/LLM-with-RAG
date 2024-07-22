@@ -171,5 +171,9 @@ logging/
 notebook/
 .chainlit/
 __pycache__/
-
+docs/
+venv/
+*.png
+*.jpg
+True/
 venv/

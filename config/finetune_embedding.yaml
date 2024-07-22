@@ -1,0 +1,6 @@
+model_type : sentence-transformers/distiluse-base-multilingual-cased-v2
+epochs: 4
+max_seq_length: 256
+dataset_id: embedding-data/QQP_triplets
+batch_size: 128
+save_path: model/distilroberta-base-sentence-transformer-triplets

@@ -7,7 +7,7 @@ load_dotenv()
 import warnings; 
 warnings.filterwarnings("ignore")
 
-from src.utils import *
+from Utils.utils import *
 from src.ragqa import RagSystem
 from flask import Flask, request, jsonify
 from src.Utils.logger import create_logger

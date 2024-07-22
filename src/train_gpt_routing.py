@@ -4,7 +4,7 @@ sys.path.append("")
 
 from datasets import load_dataset, ClassLabel
 from setfit import SetFitModel, Trainer, TrainingArguments
-from src.utils import config_parser
+from Utils.utils import config_parser
 
 config = config_parser(data_config_path = 'config/gpt_routing_train_config.yaml')
 dataset_name = config['dataset_name']
