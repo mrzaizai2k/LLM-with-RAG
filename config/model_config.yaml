@@ -9,7 +9,7 @@ custom_prompt_template_path: config/custom_prompt_template.txt
 openai_max_tokens: 1024
 # openai_model: gpt-3.5-turbo-instruct
 openai_model: 
-  0: gpt-3.5-turbo-instruct
+  0: gpt-4o-mini
   1: gpt-4o
 
 openai_temperature: 0.9

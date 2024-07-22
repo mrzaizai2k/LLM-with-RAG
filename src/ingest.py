@@ -230,8 +230,8 @@ class VectorDatabase:
     
 
 def main():
-    vector_db = VectorDatabase(data_index_path = 'data/data_index_5.csv',
-                            db_faiss_path = 'data/vectorstores/db_faiss_5/', )
+    vector_db = VectorDatabase(data_index_path = 'data/data_index_4.csv',
+                            db_faiss_path = 'data/vectorstores/db_faiss_4/', )
     vector_db.load_vector_db()
     documents, file_path_list = vector_db.create_vector_db() 
     print('file_path_list', file_path_list)

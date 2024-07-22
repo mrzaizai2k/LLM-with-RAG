@@ -77,19 +77,11 @@ class RagSystem:
 
     def load_llm(self, query:str):
         model_type = self.data_config.get('openai_model')[self.routing_model.predict([query])[0]]
-
-        if model_type=="gpt-3.5-turbo-instruct":
-            llm = OpenAI(model=model_type,
-                        openai_api_key=self.OPENAI_API_KEY, 
-                        max_tokens = self.data_config.get('openai_max_tokens'),
-                        temperature = self.data_config.get('openai_temperature'),
-                        )
-        else:
-            llm = ChatOpenAI(model=model_type,
-                        openai_api_key=self.OPENAI_API_KEY, 
-                        max_tokens = self.data_config.get('openai_max_tokens'), #reduce the cost
-                        temperature = self.data_config.get('openai_temperature'),
-                        )
+        llm = ChatOpenAI(model=model_type,
+                    openai_api_key=self.OPENAI_API_KEY, 
+                    max_tokens = self.data_config.get('openai_max_tokens'), #reduce the cost
+                    temperature = self.data_config.get('openai_temperature'),
+                    )
 
         return llm, model_type
 
