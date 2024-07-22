@@ -16,6 +16,8 @@ openai_temperature: 0.9
 k_similar: 15
 k_similar_rerank: 5
 
+bm25_weight: 0.2 # The weight of BM25 in ensemble retriever
+
 lambda_mult: 0.7
 search_type: mmr
 

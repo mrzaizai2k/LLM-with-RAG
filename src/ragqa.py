@@ -18,9 +18,10 @@ from setfit import SetFitModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from sentence_transformers import SentenceTransformer, util
-from langchain_community.retrievers import TavilySearchAPIRetriever
+from langchain.retrievers import EnsembleRetriever
+from langchain_community.retrievers import TavilySearchAPIRetriever, BM25Retriever
 
-from src.utils import *
+from Utils.utils import *
 
 class RagSystem:
     def __init__(self, data_config_path = 'config/model_config.yaml'):
@@ -34,8 +35,12 @@ class RagSystem:
         self.rerank_model = self.load_rerank_model()
         self.embeddings = self.load_embeddings()
         self.vector_db = self.load_vector_db()
-        self.retriever = self.load_retriever()
+
+        self.embedding_retriever = self.load_embedding_retriever()
+        self.bm25_retriever = self.load_bm25_retriever()
+        self.ensemble_retriever = self.load_ensemble_retriever()
         self.web_retriever = self.load_web_retriever()
+
         
     def load_vector_db(self):
         return FAISS.load_local(self.data_config.get('db_faiss_path'), 
@@ -91,13 +96,27 @@ class RagSystem:
     def format_docs(self, docs):
         return "\n\n".join(doc.page_content for doc in docs)
     
-    def load_retriever(self):
+    def load_embedding_retriever(self):
         retriever=self.vector_db.as_retriever(search_kwargs={'k':self.data_config['k_similar'], 
                                                         "search_type": self.data_config['search_type'],
                                                         "lambda_mult": self.data_config['lambda_mult'],
                                                         })
         return retriever
+
+    def load_bm25_retriever(self):
+        documents = get_documents_from_vectordb(self.vector_db)
+        bm25_retriever = BM25Retriever.from_documents(documents = documents,)
+        bm25_retriever.k=self.data_config['k_similar']
+        return bm25_retriever  
     
+    def load_ensemble_retriever(self):
+        bm25_weight = self.data_config['bm25_weight']
+        ensemble_retriever = EnsembleRetriever(
+            retrievers=[self.bm25_retriever, self.embedding_retriever], 
+            weights=[bm25_weight, 1-bm25_weight]
+        )
+        return ensemble_retriever
+        
     def load_web_retriever(self):
         retriever = TavilySearchAPIRetriever(k=2, api_key=self.TAVILY_KEY)
         return retriever
@@ -142,7 +161,8 @@ class RagSystem:
         if model_type != "gpt-3.5-turbo-instruct":
             print("use rag fusion")
 
-        relevant_docs = self.retriever.get_relevant_documents(query)
+        relevant_docs = self.ensemble_retriever.get_relevant_documents(query)
+
         similarity_scores, rerank_documents = self.rerank_document_similarity(query = query, ori_documents=relevant_docs, 
                                                            n_docs=self.data_config['k_similar_rerank'])
         
