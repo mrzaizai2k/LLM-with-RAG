@@ -7,7 +7,7 @@ db_faiss_path: data/vectorstores/db_faiss_4/
 
 custom_prompt_template_path: config/custom_prompt_template.txt
 openai_max_tokens: 1024
-# openai_model: gpt-3.5-turbo-instruct
+
 openai_model: 
   0: gpt-4o-mini
   1: gpt-4o

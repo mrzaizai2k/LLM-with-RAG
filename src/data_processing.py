@@ -7,7 +7,7 @@ import torch
 from natsort import natsorted
 import shutil
 from transformers import pipeline
-from Utils.utils import *
+from src.Utils.utils import *
 
 class MathLatexRecovery:
     def __init__(self, 

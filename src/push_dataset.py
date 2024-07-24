@@ -3,7 +3,7 @@ import sys
 sys.path.append("")
 
 import os
-from Utils.utils import config_parser
+from src.Utils.utils import config_parser
 import pandas as pd
 
 config = config_parser(data_config_path = 'config/gpt_routing_train_config.yaml')

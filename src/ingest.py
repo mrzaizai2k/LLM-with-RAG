@@ -22,7 +22,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from unstructured.cleaners.core import clean_extra_whitespace
 
-from Utils.utils import *
+from src.Utils.utils import *
 from src.data_processing import MathLatexRecovery
 
 import nltk

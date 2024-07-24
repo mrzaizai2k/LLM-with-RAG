@@ -5,7 +5,7 @@ import time
 import warnings
 warnings.filterwarnings("ignore")
 from langchain_community.vectorstores import FAISS
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 
 from langchain_huggingface import HuggingFaceEmbeddings
 
@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from src.ingest import VectorDatabase
-from langchain_openai import OpenAI, ChatOpenAI
+from langchain_openai import ChatOpenAI
 from setfit import SetFitModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
@@ -21,7 +21,7 @@ from sentence_transformers import SentenceTransformer, util
 from langchain.retrievers import EnsembleRetriever
 from langchain_community.retrievers import TavilySearchAPIRetriever, BM25Retriever
 
-from Utils.utils import *
+from src.Utils.utils import *
 
 class RagSystem:
     def __init__(self, data_config_path = 'config/model_config.yaml'):
@@ -41,7 +41,51 @@ class RagSystem:
         self.ensemble_retriever = self.load_ensemble_retriever()
         self.web_retriever = self.load_web_retriever()
 
-        
+    @timeit
+    def query_generator(self,original_query: dict) -> list[str]:
+        """Generate queries from original query
+
+        Args:
+            query (dict): original query
+
+        Returns:
+            list[str]: list of generated queries 
+        """
+
+        # original query
+        query = original_query.get("query")
+
+        # prompt for query generator
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "You are a helpful assistant that generates multiple search queries based on a single input query."),
+            ("user", "Generate multiple search queries related to:  {original_query}. When creating queries, please refine or add closely related contextual information, without significantly altering the original query's meaning"),
+            ("user", "OUTPUT (3 queries):")
+        ])
+
+        # LLM model
+        model = ChatOpenAI(
+                    max_tokens=512,
+                    temperature=0,
+                    openai_api_key=self.OPENAI_API_KEY,
+                    model_name="gpt-4o-mini"
+                )
+
+        # query generator chain
+        query_generator_chain = (
+            prompt | model | StrOutputParser() | (lambda x: x.split("\n"))
+        )
+
+        # gererate queries
+        queries = query_generator_chain.invoke({"original_query": query})
+
+        # add original query
+        queries.insert(0, "0. " + query)
+
+        # for TEST
+        print('Generated queries:\n', '\n'.join(queries))
+
+        return queries
+
     def load_vector_db(self):
         return FAISS.load_local(self.data_config.get('db_faiss_path'), 
                                     self.embeddings, 
@@ -150,8 +194,10 @@ class RagSystem:
     def final_result(self, query:str):
         llm, model_type = self.load_llm(query)
 
-        if model_type != "gpt-3.5-turbo-instruct":
-            print("use rag fusion")
+        # if model_type == "gpt-4o-mini":
+        print("use rag fusion")
+        queries = self.query_generator(original_query={"query":query})
+        print("queries:", queries)
 
         relevant_docs = self.ensemble_retriever.get_relevant_documents(query)
 

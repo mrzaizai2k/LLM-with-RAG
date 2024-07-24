@@ -5,7 +5,7 @@ sys.path.append("")
 from sentence_transformers import SentenceTransformer, models, InputExample, losses
 from datasets import load_dataset
 from torch.utils.data import DataLoader
-from Utils.utils import *
+from src.Utils.utils import *
 
 device = take_device()
 config = config_parser(data_config_path = 'config/finetune_embedding.yaml')
