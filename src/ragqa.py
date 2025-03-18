@@ -1,3 +1,4 @@
+
 import sys
 sys.path.append("")
 
@@ -20,6 +21,9 @@ from langchain_core.runnables import RunnablePassthrough
 from sentence_transformers import SentenceTransformer, util
 from langchain.retrievers import EnsembleRetriever
 from langchain_community.retrievers import TavilySearchAPIRetriever, BM25Retriever
+from langchain.callbacks.tracers import LangChainTracer
+from langchain_core.tracers.context import tracing_v2_enabled
+
 
 from src.Utils.utils import *
 
@@ -209,7 +213,9 @@ class RagSystem:
             rerank_documents.extend(web_docs)
 
         qa_chain = self.retrieval_qa_chain(llm, self.prompt)  
-        result= qa_chain.invoke({"question": query, "context": self.format_docs(rerank_documents)})
+        with tracing_v2_enabled(project_name="RAG-master"):
+            result= qa_chain.invoke({"question": query, "context": self.format_docs(rerank_documents)})
+
         response = self._format_result(query, rerank_documents, result, model_type) 
         return response 
 
